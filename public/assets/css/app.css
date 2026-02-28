@@ -1,0 +1,3 @@
+body { background: #f8fafc; }
+.card-img-top { object-fit: cover; max-height: 220px; }
+pre { white-space: pre-wrap; font-size: 0.95rem; }
