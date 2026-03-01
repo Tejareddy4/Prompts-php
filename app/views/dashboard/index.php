@@ -1,4 +1,9 @@
-<h1 class="h3 mb-3">My Profile Dashboard</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">My Frontend Dashboard</h1>
+  <?php if ((auth_user()['role_name'] ?? '') === 'super_admin'): ?>
+    <a class="btn btn-sm btn-outline-warning" href="/admin">Go to Admin Dashboard</a>
+  <?php endif; ?>
+</div>
 
 <ul class="nav nav-tabs" id="dashTabs" role="tablist">
   <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#my-prompts">My Prompts</button></li>

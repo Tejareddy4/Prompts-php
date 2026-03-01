@@ -15,7 +15,7 @@ class Prompt extends Model
         return (int) $this->db->lastInsertId();
     }
 
-    public function paginateApproved(int $limit, int $offset, ?int $userId = null): array
+    public function paginateApproved(int $limit, int $offset, ?int $userId = null, array $filters = []): array
     {
         $sql = 'SELECT p.*, u.name AS author,
                     (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
@@ -26,11 +26,30 @@ class Prompt extends Model
             $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :user_id) AS is_liked,
                      EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :user_id) AS is_saved';
         }
-        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id WHERE p.status_id = 2 ORDER BY p.created_at DESC LIMIT :limit OFFSET :offset';
+        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id WHERE p.status_id = 2';
+
+        $params = [];
+        if (!empty($filters['q'])) {
+            $sql .= ' AND (p.title LIKE :search OR p.description LIKE :search OR p.prompt_text LIKE :search)';
+            $params['search'] = '%' . $filters['q'] . '%';
+        }
+
+        $sortBy = $filters['sort'] ?? 'newest';
+        $orderBy = match ($sortBy) {
+            'most_liked' => 'likes_count DESC, p.created_at DESC',
+            'most_saved' => 'saves_count DESC, p.created_at DESC',
+            'most_viewed' => 'views_count DESC, p.created_at DESC',
+            default => 'p.created_at DESC',
+        };
+
+        $sql .= " ORDER BY {$orderBy} LIMIT :limit OFFSET :offset";
 
         $stmt = $this->db->prepare($sql);
         if ($userId) {
             $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+        }
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
         }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);

@@ -1,64 +1,97 @@
-# PromptShare (PHP + MySQL MVC)
+# PromptShare
 
-A deployment-ready prompt sharing web application built with **PHP 8+**, **MySQL**, and an MVC architecture (no Node.js required).
+PromptShare is a PHP + MySQL prompt sharing platform where users can publish prompts, discover trending content, and interact through likes, saves, views, and copy tracking.
 
-## Features
-- User registration/login with bcrypt hashed passwords
-- Session auth + role-based authorization (`user`, `super_admin`)
-- Google OAuth integration points (`/auth/google`, callback scaffold)
-- Submit prompts with image upload + compression
-- Moderation workflow: pending/approved/rejected
-- Prompt interactions: likes, saves, copies, unique session views
-- User dashboard with Instagram-style card grid and analytics counters
-- Super Admin dashboard for moderation, users, and global analytics
-- Public SEO-friendly prompt pages (`/prompt/{slug}`)
-- Open Graph tags and meta description support
-- Lazy loading prompt grid via AJAX
-- CSRF protection, XSS escaping, PDO prepared statements
-- Basic file cache for homepage query
+## What’s Included
+
+- Authentication (register/login/logout) with role-aware navigation.
+- Public discovery homepage with:
+  - Full-text search (`q`)
+  - Sorting filters (`newest`, `most liked`, `most saved`, `most viewed`)
+  - Lazy-loading card grid
+- Prompt details page with interactive actions:
+  - Like (toggle)
+  - Save (toggle)
+  - Copy (counter)
+  - Unique session views
+- Frontend user dashboard (including super admins) for personal prompt activity.
+- Admin dashboard for super admins (moderation + analytics).
+
+## Tech Stack
+
+- PHP 8+
+- MySQL 8+
+- Bootstrap 5
+- Vanilla JavaScript
+- PDO + prepared statements
 
 ## Project Structure
-```
-/app
-  /controllers
-  /core
-  /models
-  /views
-/config
-/routes
-/database
-/public
-  /assets
-  index.php
-.htaccess
+
+```text
+app/
+  controllers/
+  core/
+  models/
+  views/
+config/
+database/
+public/
+  assets/
+routes/
+README.md
 ```
 
 ## Setup
-1. Create a MySQL database (e.g. `promptshare`).
+
+1. Create the database:
+   ```bash
+   mysql -u root -p -e "CREATE DATABASE promptshare CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   ```
 2. Import schema:
    ```bash
    mysql -u root -p promptshare < database/schema.sql
    ```
-3. Update database and app config in `config/config.php`.
-4. Point Apache document root to `public/` (or keep root and use provided root `.htaccess`).
-5. Ensure `public/assets/uploads` and `storage/cache` are writable:
+3. Update configuration in `config/config.php` (DB credentials, base URL, cache settings).
+4. Ensure writable directories:
    ```bash
-   chmod -R 775 public/assets/uploads storage/cache
+   mkdir -p storage/cache public/assets/uploads
+   chmod -R 775 storage/cache public/assets/uploads
    ```
-6. Open app in browser.
+5. Serve the app from `public/` as document root.
 
-## Important Files
-- `public/index.php` — Front controller + router dispatcher
-- `routes/web.php` — Application routes and middleware assignment
-- `database/schema.sql` — Normalized schema with FKs + indexes
-- `app/controllers/PromptController.php` — prompt CRUD + interactions + upload handling
-- `app/controllers/AdminController.php` — moderation and analytics flow
-- `app/models/Prompt.php` — optimized prompt retrieval and aggregates
-- `app/models/Interaction.php` — likes/saves/copies/views tracking
-- `app/views/layouts/main.php` — SEO/OG meta + global navigation
+## Local Run (PHP Built-in Server)
 
-## Shared Hosting (cPanel) Notes
-- No build pipeline is required.
-- Upload files directly and configure DB credentials.
-- If `public/` cannot be web root, keep root `.htaccess` redirect enabled.
-- Google OAuth can be enabled by filling `google_oauth` keys in `config/config.php`.
+```bash
+php -S 0.0.0.0:8000 -t public
+```
+
+Then open: `http://localhost:8000`
+
+## Default Roles
+
+- `user`
+- `super_admin`
+
+`/dashboard` is available to any authenticated user role.  
+`/admin` is restricted to `super_admin`.
+
+## Security Notes
+
+- CSRF token checks for state-changing actions.
+- Output escaping helpers are used in views.
+- Passwords use bcrypt hashing.
+- DB operations use prepared statements.
+
+## Key Routes
+
+- `GET /` — Home (filters + list)
+- `GET /prompt/{slug}` — Prompt details
+- `POST /prompts/like` — Toggle like
+- `POST /prompts/save` — Toggle save
+- `POST /prompts/copy` — Add copy event
+- `GET /dashboard` — Frontend dashboard
+- `GET /admin` — Admin dashboard
+
+## Notes
+
+Google OAuth endpoints are scaffolded and require additional implementation/configuration before production use.

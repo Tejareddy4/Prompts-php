@@ -17,9 +17,20 @@ class HomeController extends Controller
         $db = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
         $cache = new Cache($this->config['cache']);
+        $filters = $this->filters();
 
-        $prompts = $cache->remember('home_page_1', fn() => $promptModel->paginateApproved(12, 0, Auth::id()));
-        $this->render('home/index', ['prompts' => $prompts, 'pageTitle' => 'Discover Prompts']);
+        $canUseCache = !Auth::id() && empty($filters['q']) && $filters['sort'] === 'newest';
+        if ($canUseCache) {
+            $prompts = $cache->remember('home_page_1', fn() => $promptModel->paginateApproved(12, 0, null, $filters));
+        } else {
+            $prompts = $promptModel->paginateApproved(12, 0, Auth::id(), $filters);
+        }
+
+        $this->render('home/index', [
+            'prompts' => $prompts,
+            'filters' => $filters,
+            'pageTitle' => 'Discover Prompts',
+        ]);
     }
 
     public function loadMore(array $params): void
@@ -30,8 +41,19 @@ class HomeController extends Controller
 
         $db = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
-        $rows = $promptModel->paginateApproved($limit, $offset, Auth::id());
+        $rows = $promptModel->paginateApproved($limit, $offset, Auth::id(), $this->filters());
 
         $this->json(['data' => $rows, 'next_page' => $page + 1, 'has_more' => count($rows) === $limit]);
+    }
+
+    private function filters(): array
+    {
+        $sort = (string) ($_GET['sort'] ?? 'newest');
+        $allowedSorts = ['newest', 'most_liked', 'most_saved', 'most_viewed'];
+
+        return [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'sort' => in_array($sort, $allowedSorts, true) ? $sort : 'newest',
+        ];
     }
 }

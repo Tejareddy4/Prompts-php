@@ -1,3 +1,45 @@
-body { background: #f8fafc; }
-.card-img-top { object-fit: cover; max-height: 220px; }
-pre { white-space: pre-wrap; font-size: 0.95rem; }
+body {
+  background: radial-gradient(circle at top, #eef2ff 0%, #f8fafc 35%, #f8fafc 100%);
+  color: #1f2937;
+}
+
+.nav-glass {
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.2);
+}
+
+.hero-panel {
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #06b6d4 100%);
+  color: #fff;
+  box-shadow: 0 20px 50px -30px #0f172a;
+}
+
+.hero-panel .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.filter-panel {
+  border-radius: 1rem;
+}
+
+.prompt-card {
+  border-radius: 0.95rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12) !important;
+}
+
+.card-img-top {
+  object-fit: cover;
+  max-height: 220px;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}

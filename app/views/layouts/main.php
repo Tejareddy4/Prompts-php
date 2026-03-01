@@ -17,15 +17,16 @@
     <link href="/assets/css/app.css" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top nav-glass">
     <div class="container">
-        <a class="navbar-brand" href="/">PromptShare</a>
+        <a class="navbar-brand fw-semibold" href="/">PromptShare</a>
         <div class="ms-auto d-flex gap-2 align-items-center">
-            <a class="btn btn-outline-light btn-sm" href="/prompts/create">Submit</a>
+            <a class="btn btn-outline-light btn-sm" href="/">Home</a>
+            <a class="btn btn-primary btn-sm" href="/prompts/create">Submit</a>
             <?php if ($user): ?>
-                <a class="btn btn-outline-info btn-sm" href="/dashboard">Dashboard</a>
+                <a class="btn btn-outline-info btn-sm" href="/dashboard">Frontend Dashboard</a>
                 <?php if (($user['role_name'] ?? '') === 'super_admin'): ?>
-                    <a class="btn btn-warning btn-sm" href="/admin">Admin</a>
+                    <a class="btn btn-warning btn-sm" href="/admin">Admin Dashboard</a>
                 <?php endif; ?>
                 <form method="post" action="/logout" class="d-inline"><?= csrf_field() ?><button class="btn btn-outline-danger btn-sm">Logout</button></form>
             <?php else: ?>
