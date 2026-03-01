@@ -9,8 +9,8 @@
         <pre class="bg-light p-3 rounded" id="prompt-text"><?= e($prompt['prompt_text']) ?></pre>
 
         <div class="d-flex flex-wrap gap-2" data-prompt-id="<?= (int)$prompt['id'] ?>">
-            <button class="btn btn-outline-danger js-like"><i class="bi bi-heart-fill"></i> <span class="count"><?= (int)$prompt['likes_count'] ?></span></button>
-            <button class="btn btn-outline-secondary js-save"><i class="bi bi-bookmark"></i> <span class="count"><?= (int)$prompt['saves_count'] ?></span></button>
+            <button class="btn <?= !empty($prompt['is_liked']) ? 'btn-danger' : 'btn-outline-danger' ?> js-like" aria-pressed="<?= !empty($prompt['is_liked']) ? 'true' : 'false' ?>"><i class="bi bi-heart-fill"></i> Likes <span class="count"><?= (int)$prompt['likes_count'] ?></span></button>
+            <button class="btn <?= !empty($prompt['is_saved']) ? 'btn-secondary' : 'btn-outline-secondary' ?> js-save" aria-pressed="<?= !empty($prompt['is_saved']) ? 'true' : 'false' ?>"><i class="bi bi-bookmark"></i> Saves <span class="count"><?= (int)$prompt['saves_count'] ?></span></button>
             <button class="btn btn-outline-primary js-copy"><i class="bi bi-clipboard"></i> Copy (<span class="count"><?= (int)$prompt['copies_count'] ?></span>)</button>
             <span class="badge text-bg-light"><i class="bi bi-eye"></i> <?= (int)$prompt['views_count'] ?> views</span>
         </div>
