@@ -251,7 +251,7 @@ a:hover { color: var(--c-primary-d); }
 
 .prompt-card .card-img-wrap {
   overflow: hidden;
-  height: 176px;
+  height: 150px;
   background: linear-gradient(135deg, #e0e7ff, #ede9fe);
   flex-shrink: 0;
   display: flex;
@@ -291,6 +291,7 @@ a:hover { color: var(--c-primary-d); }
 .prompt-card .card-title a {
   color: var(--c-text);
   text-decoration: none;
+  display: block;  /* needed so the parent's line-clamp clips the link text */
 }
 
 .prompt-card .card-title a:hover { color: var(--c-primary); }
@@ -303,7 +304,7 @@ a:hover { color: var(--c-primary-d); }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 1;
+  max-height: 2.5em;     /* hard fallback so non-webkit browsers also clip */
   margin-bottom: 0.75rem;
 }
 
@@ -311,6 +312,7 @@ a:hover { color: var(--c-primary-d); }
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-top: auto;      /* push author+stats to bottom of card */
   margin-bottom: 0.75rem;
 }
 
