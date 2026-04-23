@@ -10,12 +10,13 @@ use App\Core\Csrf;
 use App\Core\Database;
 use App\Models\Interaction;
 use App\Models\Prompt;
+use App\Services\PromptService;
 
 class PromptController extends Controller
 {
     public function show(array $params): void
     {
-        $db = Database::connection($this->config['db']);
+        $db          = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
         $interaction = new Interaction($db);
 
@@ -29,8 +30,8 @@ class PromptController extends Controller
         $interaction->addView((int)$prompt['id'], hash('sha256', session_id()), Auth::id());
 
         $this->render('prompts/show', [
-            'prompt' => $prompt,
-            'pageTitle' => $prompt['title'],
+            'prompt'          => $prompt,
+            'pageTitle'       => $prompt['title'],
             'metaDescription' => substr($prompt['description'], 0, 155),
         ]);
     }
@@ -47,33 +48,13 @@ class PromptController extends Controller
             $this->redirect('/prompts/create');
         }
 
-        $title = trim($_POST['title'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $promptText = trim($_POST['prompt_text'] ?? '');
+        $service = $this->makeService();
+        $result  = $service->submit($_POST, $_FILES['image'] ?? null, (int) Auth::id());
 
-        if ($title === '') {
-            flash('Prompt title is required.', 'error');
+        if (!$result['ok']) {
+            flash($result['error'], 'error');
             $this->redirect('/prompts/create');
         }
-
-        if ($promptText === '') {
-            flash('Prompt text is required.', 'error');
-            $this->redirect('/prompts/create');
-        }
-
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-')) . '-' . substr(bin2hex(random_bytes(3)), 0, 6);
-        $imagePath = $this->handleImageUpload($_FILES['image'] ?? null);
-
-        $db = Database::connection($this->config['db']);
-        $promptModel = new Prompt($db);
-        $promptModel->create([
-            'user_id' => Auth::id(),
-            'title' => $title,
-            'slug' => $slug,
-            'description' => $description,
-            'prompt_text' => $promptText,
-            'image_path' => $imagePath,
-        ]);
 
         flash('Your prompt has been submitted for review.', 'success');
         $this->redirect('/dashboard');
@@ -81,19 +62,16 @@ class PromptController extends Controller
 
     public function editForm(array $params): void
     {
-        $db = Database::connection($this->config['db']);
+        $db          = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
-        $prompt = $promptModel->findByIdForUser((int)$params['id'], (int)Auth::id());
+        $prompt      = $promptModel->findByIdForUser((int)$params['id'], (int)Auth::id());
 
         if (!$prompt) {
-            flash('Prompt not found or you do not have permission to edit it.', 'error');
+            flash('Prompt not found or permission denied.', 'error');
             $this->redirect('/dashboard');
         }
 
-        $this->render('prompts/edit', [
-            'prompt' => $prompt,
-            'pageTitle' => 'Edit Prompt',
-        ]);
+        $this->render('prompts/edit', ['prompt' => $prompt, 'pageTitle' => 'Edit Prompt']);
     }
 
     public function update(array $params): void
@@ -103,36 +81,13 @@ class PromptController extends Controller
             $this->redirect('/dashboard');
         }
 
-        $db = Database::connection($this->config['db']);
-        $promptModel = new Prompt($db);
-        $prompt = $promptModel->findByIdForUser((int)$params['id'], (int)Auth::id());
+        $service = $this->makeService();
+        $result  = $service->edit((int)$params['id'], (int)Auth::id(), $_POST, $_FILES['image'] ?? null);
 
-        if (!$prompt) {
-            flash('Prompt not found or you do not have permission to edit it.', 'error');
-            $this->redirect('/dashboard');
-        }
-
-        $title = trim($_POST['title'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $promptText = trim($_POST['prompt_text'] ?? '');
-
-        if ($title === '' || $promptText === '') {
-            flash('Title and prompt text are required.', 'error');
+        if (!$result['ok']) {
+            flash($result['error'], 'error');
             $this->redirect('/prompts/' . $params['id'] . '/edit');
         }
-
-        $imagePath = $prompt['image_path'];
-        $newImage = $this->handleImageUpload($_FILES['image'] ?? null);
-        if ($newImage !== null) {
-            $imagePath = $newImage;
-        }
-
-        $promptModel->update((int)$params['id'], [
-            'title' => $title,
-            'description' => $description,
-            'prompt_text' => $promptText,
-            'image_path' => $imagePath,
-        ]);
 
         flash('Prompt updated and re-submitted for review.', 'success');
         $this->redirect('/dashboard');
@@ -144,10 +99,7 @@ class PromptController extends Controller
             $this->json(['error' => 'Unauthorized'], 401);
             return;
         }
-
-        $db = Database::connection($this->config['db']);
-        $interaction = new Interaction($db);
-        $result = $interaction->toggleLike((int)$_POST['prompt_id'], Auth::id());
+        $result = $this->makeService()->recordInteractionAndRefreshScore('like', (int)$_POST['prompt_id'], Auth::id());
         $this->json($result);
     }
 
@@ -157,10 +109,7 @@ class PromptController extends Controller
             $this->json(['error' => 'Unauthorized'], 401);
             return;
         }
-
-        $db = Database::connection($this->config['db']);
-        $interaction = new Interaction($db);
-        $result = $interaction->toggleSave((int)$_POST['prompt_id'], Auth::id());
+        $result = $this->makeService()->recordInteractionAndRefreshScore('save', (int)$_POST['prompt_id'], Auth::id());
         $this->json($result);
     }
 
@@ -170,60 +119,17 @@ class PromptController extends Controller
             $this->json(['error' => 'Invalid token'], 419);
             return;
         }
-
-        $db = Database::connection($this->config['db']);
-        $interaction = new Interaction($db);
-        $count = $interaction->addCopy((int)$_POST['prompt_id'], Auth::id());
-        $this->json(['count' => $count]);
+        $result = $this->makeService()->recordInteractionAndRefreshScore('copy', (int)$_POST['prompt_id'], Auth::id());
+        $this->json(['count' => $result['count']]);
     }
 
-    private function handleImageUpload(?array $file): ?string
+    private function makeService(): PromptService
     {
-        if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
-            return null;
-        }
-
-        if ($file['size'] > $this->config['upload']['max_size']) {
-            flash('Image must be under 5MB.', 'warning');
-            return null;
-        }
-
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = finfo_file($finfo, $file['tmp_name']);
-        finfo_close($finfo);
-
-        if (!in_array($mime, $this->config['upload']['allowed_types'], true)) {
-            flash('Only JPEG, PNG, and WebP images are allowed.', 'warning');
-            return null;
-        }
-
-        $extension = match ($mime) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            default => 'webp',
-        };
-
-        $filename = uniqid('prompt_', true) . '.' . $extension;
-        $destination = $this->config['upload']['dir'] . '/' . $filename;
-
-        $image = match ($mime) {
-            'image/jpeg' => imagecreatefromjpeg($file['tmp_name']),
-            'image/png'  => imagecreatefrompng($file['tmp_name']),
-            default      => imagecreatefromwebp($file['tmp_name']),
-        };
-
-        if ($image === false) {
-            return null;
-        }
-
-        match ($mime) {
-            'image/jpeg' => imagejpeg($image, $destination, 75),
-            'image/png'  => imagepng($image, $destination, 6),
-            default      => imagewebp($image, $destination, 75),
-        };
-
-        imagedestroy($image);
-
-        return '/assets/uploads/' . $filename;
+        $db = Database::connection($this->config['db']);
+        return new PromptService(
+            new Prompt($db),
+            new Interaction($db),
+            $this->config['upload'],
+        );
     }
 }

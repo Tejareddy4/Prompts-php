@@ -13,7 +13,13 @@
     <?php endif; ?>
     <div class="pcard-author">
       <span class="avatar avatar-xs"><?= strtoupper(substr($item['author'] ?? 'U', 0, 2)) ?></span>
-      <?= e($item['author'] ?? 'Unknown') ?>
+      <?php if (!empty($item['author_username'])): ?>
+        <a href="/u/<?= e($item['author_username']) ?>" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">
+          <?= e($item['author']) ?>
+        </a>
+      <?php else: ?>
+        <?= e($item['author'] ?? 'Unknown') ?>
+      <?php endif; ?>
     </div>
     <div class="pcard-stats">
       <span title="Likes"><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= (int)($item['likes_count'] ?? 0) ?></span>

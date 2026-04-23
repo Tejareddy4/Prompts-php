@@ -7,6 +7,7 @@ use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Controllers\PromptController;
+use App\Controllers\UserController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/prompts/load', [HomeController::class, 'loadMore']);
@@ -27,6 +28,8 @@ $router->post('/prompts/{id}/edit', [PromptController::class, 'update'], ['auth'
 $router->post('/prompts/like', [PromptController::class, 'like'], ['auth']);
 $router->post('/prompts/save', [PromptController::class, 'save'], ['auth']);
 $router->post('/prompts/copy', [PromptController::class, 'copy']);
+
+$router->get('/u/{username}', [UserController::class, 'profile']);
 
 $router->get('/dashboard', [DashboardController::class, 'index'], ['auth']);
 

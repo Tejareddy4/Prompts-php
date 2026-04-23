@@ -5,7 +5,14 @@
   <h1><?= e($prompt['title']) ?></h1>
   <div class="show-author">
     <span class="avatar avatar-xs"><?= strtoupper(substr($prompt['author'] ?? 'U', 0, 2)) ?></span>
-    by <strong><?= e($prompt['author']) ?></strong>
+    by
+    <?php if (!empty($prompt['author_username'])): ?>
+      <a href="/u/<?= e($prompt['author_username']) ?>" style="color:rgba(255,255,255,.9);font-weight:700;">
+        <?= e($prompt['author']) ?>
+      </a>
+    <?php else: ?>
+      <strong><?= e($prompt['author']) ?></strong>
+    <?php endif; ?>
   </div>
 </div>
 

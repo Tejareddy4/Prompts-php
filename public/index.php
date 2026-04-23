@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 use App\Core\Router;
 
+// ── Load .env ────────────────────────────────────────────────
+$envFile = __DIR__ . '/../.env';
+if (is_readable($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
+            continue;
+        }
+        [$key, $val] = array_map('trim', explode('=', $line, 2));
+        $val = preg_replace('/^(["\'])(.*)\\1$/', '$2', $val);
+        $_ENV[$key] = $val;
+        putenv("$key=$val");
+    }
+}
+
 require __DIR__ . '/../app/core/helpers.php';
 
 session_name(config('app.session_name') ?? 'promptshare');

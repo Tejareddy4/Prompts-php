@@ -1,7 +1,7 @@
 <?php
 $q    = $filters['q'] ?? '';
 $sort = $filters['sort'] ?? 'newest';
-$sortLabels = ['newest'=>'Newest','most_liked'=>'Top Liked','most_saved'=>'Most Saved','most_viewed'=>'Trending'];
+$sortLabels = ['newest'=>'Newest','most_liked'=>'Top Liked','most_saved'=>'Most Saved','most_viewed'=>'Most Viewed','trending'=>'Trending'];
 ?>
 
 <!-- Hero -->
@@ -37,7 +37,7 @@ $sortLabels = ['newest'=>'Newest','most_liked'=>'Top Liked','most_saved'=>'Most 
     <a href="?<?= e(http_build_query(array_merge($filters, ['sort' => $key]))) ?>"
        class="sort-pill <?= $sort === $key ? 'active' : '' ?>">
       <?php
-        $icons = ['newest'=>'clock','most_liked'=>'heart-fill','most_saved'=>'bookmark-fill','most_viewed'=>'fire'];
+        $icons = ['newest'=>'clock','most_liked'=>'heart-fill','most_saved'=>'bookmark-fill','most_viewed'=>'eye-fill','trending'=>'fire'];
         echo '<i class="bi bi-' . $icons[$key] . '"></i> ';
       ?>
       <?= $label ?>
