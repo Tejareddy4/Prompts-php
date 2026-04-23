@@ -5,16 +5,16 @@ declare(strict_types=1);
 return [
     'app' => [
         'name' => 'PromptShare',
-        'base_url' => 'http://localhost',
+        'base_url' => 'https://prompt.xpanda.in',
         'env' => 'development',
         'session_name' => 'promptshare_session',
     ],
     'db' => [
         'host' => '127.0.0.1',
         'port' => 3306,
-        'database' => 'promptshare',
-        'username' => 'root',
-        'password' => '',
+        'database' => 'u166258402_promptshare',
+        'username' => 'u166258402',
+        'password' => '',  // ← add your Hostinger MySQL password here
         'charset' => 'utf8mb4',
     ],
     'upload' => [
