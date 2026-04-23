@@ -13,8 +13,8 @@ return [
         'host' => '127.0.0.1',
         'port' => 3306,
         'database' => 'u166258402_promptshare',
-        'username' => 'u166258402',
-        'password' => '',  // ← add your Hostinger MySQL password here
+        'username' => 'u166258402_promptshare',
+        'password' => 'Tejareddy@6300',  // ← add your Hostinger MySQL password here
         'charset' => 'utf8mb4',
     ],
     'upload' => [
