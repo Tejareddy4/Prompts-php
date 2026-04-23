@@ -25,6 +25,7 @@ class AuthController extends Controller
     public function login(): void
     {
         if (!Csrf::validate($_POST['_csrf'] ?? null)) {
+            flash('Session expired, please try again.', 'warning');
             $this->redirect('/login');
         }
 
@@ -33,7 +34,7 @@ class AuthController extends Controller
         $user = $userModel->findByEmail(trim($_POST['email'] ?? ''));
 
         if (!$user || !password_verify($_POST['password'] ?? '', $user['password_hash'])) {
-            $_SESSION['flash'] = 'Invalid credentials';
+            flash('Invalid email or password.', 'error');
             $this->redirect('/login');
         }
 
@@ -44,6 +45,7 @@ class AuthController extends Controller
     public function register(): void
     {
         if (!Csrf::validate($_POST['_csrf'] ?? null)) {
+            flash('Session expired, please try again.', 'warning');
             $this->redirect('/register');
         }
 
@@ -51,15 +53,25 @@ class AuthController extends Controller
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
-            $_SESSION['flash'] = 'Invalid registration data';
+        if ($name === '') {
+            flash('Please enter your full name.', 'error');
+            $this->redirect('/register');
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('Please enter a valid email address.', 'error');
+            $this->redirect('/register');
+        }
+
+        if (strlen($password) < 8) {
+            flash('Password must be at least 8 characters.', 'error');
             $this->redirect('/register');
         }
 
         $db = Database::connection($this->config['db']);
         $userModel = new User($db);
         if ($userModel->findByEmail($email)) {
-            $_SESSION['flash'] = 'Email already exists';
+            flash('An account with that email already exists.', 'error');
             $this->redirect('/register');
         }
 
@@ -67,6 +79,7 @@ class AuthController extends Controller
         $user = $userModel->findByEmail($email);
         $user['id'] = $userId;
         Auth::login($user);
+        flash('Welcome to PromptShare, ' . $name . '!', 'success');
         $this->redirect('/dashboard');
     }
 
@@ -78,15 +91,13 @@ class AuthController extends Controller
 
     public function googleRedirect(): void
     {
-        if (!$this->config['google_oauth']['enabled']) {
-            $_SESSION['flash'] = 'Google OAuth is disabled. Configure credentials to enable.';
-            $this->redirect('/login');
-        }
-        echo 'Implement OAuth redirect with Google endpoints.';
+        flash('Google sign-in is not configured yet.', 'warning');
+        $this->redirect('/login');
     }
 
     public function googleCallback(): void
     {
-        echo 'Implement OAuth callback token exchange + upsert user.';
+        flash('Google sign-in is not configured yet.', 'warning');
+        $this->redirect('/login');
     }
 }

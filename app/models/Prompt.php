@@ -97,6 +97,25 @@ class Prompt extends Model
         $stmt->execute(['id' => $promptId]);
     }
 
+    public function findByIdForUser(int $promptId, int $userId): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM prompts WHERE id = :id AND user_id = :user_id LIMIT 1');
+        $stmt->execute(['id' => $promptId, 'user_id' => $userId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function update(int $promptId, array $data): void
+    {
+        $stmt = $this->db->prepare('UPDATE prompts SET title = :title, description = :description, prompt_text = :prompt_text, image_path = :image_path, status_id = 1, updated_at = NOW() WHERE id = :id');
+        $stmt->execute([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'prompt_text' => $data['prompt_text'],
+            'image_path' => $data['image_path'],
+            'id' => $promptId,
+        ]);
+    }
+
     public function userPrompts(int $userId): array
     {
         $stmt = $this->db->prepare('SELECT p.*, (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count, (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count, (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count, (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count FROM prompts p WHERE p.user_id = :user_id ORDER BY p.created_at DESC');

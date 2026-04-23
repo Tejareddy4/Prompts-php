@@ -66,6 +66,10 @@ class Interaction extends Model
 
     private function count(string $table, int $promptId): int
     {
+        static $allowed = ['likes', 'saves', 'copies', 'views'];
+        if (!in_array($table, $allowed, true)) {
+            throw new \InvalidArgumentException("Invalid interaction table: {$table}");
+        }
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM {$table} WHERE prompt_id = :promptId");
         $stmt->execute(['promptId' => $promptId]);
         return (int) $stmt->fetchColumn();

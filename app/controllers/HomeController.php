@@ -26,10 +26,15 @@ class HomeController extends Controller
             $prompts = $promptModel->paginateApproved(12, 0, Auth::id(), $filters);
         }
 
+        $analytics = $promptModel->analytics();
+
         $this->render('home/index', [
             'prompts' => $prompts,
             'filters' => $filters,
             'pageTitle' => 'Discover Prompts',
+            'totalCount' => $analytics['approved_prompts'],
+            'totalLikes' => $analytics['total_likes'],
+            'totalViews' => $analytics['total_views'],
         ]);
     }
 

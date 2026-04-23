@@ -48,3 +48,22 @@ function is_liked(array $prompt): bool
 {
     return (bool)($prompt['is_liked'] ?? false);
 }
+
+function flash(string $message, string $type = 'info'): void
+{
+    $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+}
+
+function flash_get(): ?array
+{
+    if (empty($_SESSION['flash'])) {
+        return null;
+    }
+    $flash = $_SESSION['flash'];
+    unset($_SESSION['flash']);
+    // Support old string-only flashes for backwards compat
+    if (is_string($flash)) {
+        return ['message' => $flash, 'type' => 'info'];
+    }
+    return $flash;
+}

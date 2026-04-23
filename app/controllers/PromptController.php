@@ -22,7 +22,7 @@ class PromptController extends Controller
         $prompt = $promptModel->findBySlug($params['slug'], Auth::id());
         if (!$prompt) {
             http_response_code(404);
-            echo 'Prompt not found';
+            $this->render('errors/404', ['pageTitle' => 'Prompt Not Found']);
             return;
         }
 
@@ -37,12 +37,13 @@ class PromptController extends Controller
 
     public function createForm(): void
     {
-        $this->render('prompts/create', ['pageTitle' => 'Submit Prompt']);
+        $this->render('prompts/create', ['pageTitle' => 'Submit a Prompt']);
     }
 
     public function store(): void
     {
         if (!Csrf::validate($_POST['_csrf'] ?? null)) {
+            flash('Session expired, please try again.', 'warning');
             $this->redirect('/prompts/create');
         }
 
@@ -50,8 +51,13 @@ class PromptController extends Controller
         $description = trim($_POST['description'] ?? '');
         $promptText = trim($_POST['prompt_text'] ?? '');
 
-        if ($title === '' || $promptText === '') {
-            $_SESSION['flash'] = 'Title and prompt text are required.';
+        if ($title === '') {
+            flash('Prompt title is required.', 'error');
+            $this->redirect('/prompts/create');
+        }
+
+        if ($promptText === '') {
+            flash('Prompt text is required.', 'error');
             $this->redirect('/prompts/create');
         }
 
@@ -69,7 +75,66 @@ class PromptController extends Controller
             'image_path' => $imagePath,
         ]);
 
-        $_SESSION['flash'] = 'Prompt submitted for review.';
+        flash('Your prompt has been submitted for review.', 'success');
+        $this->redirect('/dashboard');
+    }
+
+    public function editForm(array $params): void
+    {
+        $db = Database::connection($this->config['db']);
+        $promptModel = new Prompt($db);
+        $prompt = $promptModel->findByIdForUser((int)$params['id'], (int)Auth::id());
+
+        if (!$prompt) {
+            flash('Prompt not found or you do not have permission to edit it.', 'error');
+            $this->redirect('/dashboard');
+        }
+
+        $this->render('prompts/edit', [
+            'prompt' => $prompt,
+            'pageTitle' => 'Edit Prompt',
+        ]);
+    }
+
+    public function update(array $params): void
+    {
+        if (!Csrf::validate($_POST['_csrf'] ?? null)) {
+            flash('Session expired, please try again.', 'warning');
+            $this->redirect('/dashboard');
+        }
+
+        $db = Database::connection($this->config['db']);
+        $promptModel = new Prompt($db);
+        $prompt = $promptModel->findByIdForUser((int)$params['id'], (int)Auth::id());
+
+        if (!$prompt) {
+            flash('Prompt not found or you do not have permission to edit it.', 'error');
+            $this->redirect('/dashboard');
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $promptText = trim($_POST['prompt_text'] ?? '');
+
+        if ($title === '' || $promptText === '') {
+            flash('Title and prompt text are required.', 'error');
+            $this->redirect('/prompts/' . $params['id'] . '/edit');
+        }
+
+        $imagePath = $prompt['image_path'];
+        $newImage = $this->handleImageUpload($_FILES['image'] ?? null);
+        if ($newImage !== null) {
+            $imagePath = $newImage;
+        }
+
+        $promptModel->update((int)$params['id'], [
+            'title' => $title,
+            'description' => $description,
+            'prompt_text' => $promptText,
+            'image_path' => $imagePath,
+        ]);
+
+        flash('Prompt updated and re-submitted for review.', 'success');
         $this->redirect('/dashboard');
     }
 
@@ -119,6 +184,7 @@ class PromptController extends Controller
         }
 
         if ($file['size'] > $this->config['upload']['max_size']) {
+            flash('Image must be under 5MB.', 'warning');
             return null;
         }
 
@@ -127,6 +193,7 @@ class PromptController extends Controller
         finfo_close($finfo);
 
         if (!in_array($mime, $this->config['upload']['allowed_types'], true)) {
+            flash('Only JPEG, PNG, and WebP images are allowed.', 'warning');
             return null;
         }
 
@@ -139,20 +206,23 @@ class PromptController extends Controller
         $filename = uniqid('prompt_', true) . '.' . $extension;
         $destination = $this->config['upload']['dir'] . '/' . $filename;
 
-        if ($mime === 'image/jpeg') {
-            $image = imagecreatefromjpeg($file['tmp_name']);
-            imagejpeg($image, $destination, 75);
-        } elseif ($mime === 'image/png') {
-            $image = imagecreatefrompng($file['tmp_name']);
-            imagepng($image, $destination, 6);
-        } else {
-            $image = imagecreatefromwebp($file['tmp_name']);
-            imagewebp($image, $destination, 75);
+        $image = match ($mime) {
+            'image/jpeg' => imagecreatefromjpeg($file['tmp_name']),
+            'image/png'  => imagecreatefrompng($file['tmp_name']),
+            default      => imagecreatefromwebp($file['tmp_name']),
+        };
+
+        if ($image === false) {
+            return null;
         }
 
-        if (isset($image) && $image !== false) {
-            imagedestroy($image);
-        }
+        match ($mime) {
+            'image/jpeg' => imagejpeg($image, $destination, 75),
+            'image/png'  => imagepng($image, $destination, 6),
+            default      => imagewebp($image, $destination, 75),
+        };
+
+        imagedestroy($image);
 
         return '/assets/uploads/' . $filename;
     }

@@ -25,6 +25,17 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// Ensure required directories exist
+$cfg = config();
+foreach ([
+    $cfg['upload']['dir'] ?? null,
+    $cfg['cache']['path'] ?? null,
+] as $dir) {
+    if ($dir && !is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+}
+
 $router = new Router();
 require __DIR__ . '/../routes/web.php';
 

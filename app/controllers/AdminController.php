@@ -30,12 +30,12 @@ class AdminController extends Controller
 
     public function approve(): void
     {
-        $this->changeStatus(2);
+        $this->changeStatus(2, 'Prompt approved and published.');
     }
 
     public function reject(): void
     {
-        $this->changeStatus(3);
+        $this->changeStatus(3, 'Prompt rejected.');
     }
 
     public function delete(): void
@@ -47,10 +47,11 @@ class AdminController extends Controller
         $db = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
         $promptModel->delete((int) $_POST['prompt_id']);
+        flash('Prompt deleted.', 'success');
         $this->redirect('/admin');
     }
 
-    private function changeStatus(int $status): void
+    private function changeStatus(int $status, string $message): void
     {
         if (!Csrf::validate($_POST['_csrf'] ?? null)) {
             $this->redirect('/admin');
@@ -59,6 +60,7 @@ class AdminController extends Controller
         $db = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
         $promptModel->updateStatus((int) $_POST['prompt_id'], $status);
+        flash($message, 'success');
         $this->redirect('/admin');
     }
 }

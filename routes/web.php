@@ -22,6 +22,8 @@ $router->get('/auth/google/callback', [AuthController::class, 'googleCallback'])
 $router->get('/prompt/{slug}', [PromptController::class, 'show']);
 $router->get('/prompts/create', [PromptController::class, 'createForm'], ['auth']);
 $router->post('/prompts', [PromptController::class, 'store'], ['auth']);
+$router->get('/prompts/{id}/edit', [PromptController::class, 'editForm'], ['auth']);
+$router->post('/prompts/{id}/edit', [PromptController::class, 'update'], ['auth']);
 $router->post('/prompts/like', [PromptController::class, 'like'], ['auth']);
 $router->post('/prompts/save', [PromptController::class, 'save'], ['auth']);
 $router->post('/prompts/copy', [PromptController::class, 'copy']);
