@@ -1,167 +1,147 @@
 <?php
 $user = auth_user();
-$totalPrompts = count($myPrompts);
 $totalLikesReceived = array_sum(array_column($myPrompts, 'likes_count'));
 $totalSavesReceived = array_sum(array_column($myPrompts, 'saves_count'));
 $totalCopies       = array_sum(array_column($myPrompts, 'copies_count'));
+$statusMap = [1 => 'pending', 2 => 'approved', 3 => 'rejected'];
 ?>
 
-<!-- Page header -->
-<div class="d-flex align-items-center justify-content-between mb-4 gap-2">
-  <div class="page-header mb-0">
-    <span class="avatar-sm"><?= strtoupper(substr($user['name'] ?? 'U', 0, 2)) ?></span>
-    <div>
-      <h1 style="font-size:1.35rem;">Welcome, <?= e(explode(' ', $user['name'])[0]) ?></h1>
-      <p class="text-muted small mb-0"><?= e($user['email'] ?? '') ?></p>
-    </div>
+<!-- Profile header -->
+<div class="dash-header">
+  <span class="avatar avatar-md"><?= strtoupper(substr($user['name'] ?? 'U', 0, 2)) ?></span>
+  <div class="dash-header-info">
+    <h1><?= e($user['name']) ?></h1>
+    <p><?= e($user['email'] ?? '') ?></p>
   </div>
-  <a class="btn btn-primary btn-sm" href="/prompts/create">
-    <i class="bi bi-plus-lg me-1"></i> New Prompt
+  <a href="/prompts/create" class="btn btn-primary btn-sm" style="margin-left:auto;flex-shrink:0;">
+    <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">New</span>
   </a>
 </div>
 
-<!-- Stats row -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="dash-stat-card">
-      <div class="dash-stat-icon purple"><i class="bi bi-file-text"></i></div>
-      <div>
-        <div class="dash-stat-num"><?= $totalPrompts ?></div>
-        <div class="dash-stat-label">My Prompts</div>
-      </div>
-    </div>
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-card-icon ic-purple"><i class="bi bi-file-text"></i></div>
+    <div class="stat-card-val"><?= count($myPrompts) ?></div>
+    <div class="stat-card-lbl">Prompts</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="dash-stat-card">
-      <div class="dash-stat-icon orange"><i class="bi bi-heart-fill"></i></div>
-      <div>
-        <div class="dash-stat-num"><?= $totalLikesReceived ?></div>
-        <div class="dash-stat-label">Likes received</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-card-icon ic-orange"><i class="bi bi-heart-fill"></i></div>
+    <div class="stat-card-val"><?= $totalLikesReceived ?></div>
+    <div class="stat-card-lbl">Likes</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="dash-stat-card">
-      <div class="dash-stat-icon blue"><i class="bi bi-bookmark-fill"></i></div>
-      <div>
-        <div class="dash-stat-num"><?= $totalSavesReceived ?></div>
-        <div class="dash-stat-label">Saves received</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-card-icon ic-blue"><i class="bi bi-bookmark-fill"></i></div>
+    <div class="stat-card-val"><?= $totalSavesReceived ?></div>
+    <div class="stat-card-lbl">Saves</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="dash-stat-card">
-      <div class="dash-stat-icon green"><i class="bi bi-clipboard-fill"></i></div>
-      <div>
-        <div class="dash-stat-num"><?= $totalCopies ?></div>
-        <div class="dash-stat-label">Total copies</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-card-icon ic-green"><i class="bi bi-clipboard-fill"></i></div>
+    <div class="stat-card-val"><?= $totalCopies ?></div>
+    <div class="stat-card-lbl">Copies</div>
   </div>
 </div>
 
 <!-- Tabs -->
-<ul class="nav nav-tabs" id="dashTabs" role="tablist">
-  <li class="nav-item">
-    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#my-prompts">
-      My Prompts <span class="badge bg-primary ms-1" style="font-size:.7rem;"><?= $totalPrompts ?></span>
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#saved">
-      Saved <span class="badge bg-secondary ms-1" style="font-size:.7rem;"><?= count($savedPrompts) ?></span>
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#liked">
-      Liked <span class="badge bg-danger ms-1" style="font-size:.7rem;"><?= count($likedPrompts) ?></span>
-    </button>
-  </li>
-</ul>
+<div class="tabs" id="dashTabs">
+  <button class="tab-btn active" data-target="my-prompts">
+    My Prompts <span class="tab-badge"><?= count($myPrompts) ?></span>
+  </button>
+  <button class="tab-btn" data-target="saved">
+    Saved <span class="tab-badge"><?= count($savedPrompts) ?></span>
+  </button>
+  <button class="tab-btn" data-target="liked">
+    Liked <span class="tab-badge"><?= count($likedPrompts) ?></span>
+  </button>
+</div>
 
-<div class="tab-content">
-  <!-- My Prompts -->
-  <div class="tab-pane fade show active" id="my-prompts">
-    <?php if (empty($myPrompts)): ?>
-      <div class="empty-state">
-        <div><i class="bi bi-file-earmark-plus d-block"></i></div>
-        <h6 class="mt-2">No prompts yet</h6>
-        <p class="small">You haven't submitted any prompts. <a href="/prompts/create">Submit your first prompt</a></p>
-      </div>
-    <?php else: ?>
-      <div class="row g-3">
-        <?php foreach ($myPrompts as $p):
-          $statusMap = [1 => 'pending', 2 => 'approved', 3 => 'rejected'];
-          $statusLabel = $statusMap[$p['status_id']] ?? 'pending';
-        ?>
-          <div class="col-md-6 col-lg-4">
-            <div class="prompt-card" style="height:auto;">
-              <?php if ($p['image_path']): ?>
-                <div class="card-img-wrap" style="height:120px;">
-                  <img src="<?= e($p['image_path']) ?>" alt="<?= e($p['title']) ?>">
-                </div>
+<!-- My Prompts -->
+<div class="tab-panel active" id="my-prompts">
+  <?php if (empty($myPrompts)): ?>
+    <div class="empty">
+      <i class="bi bi-file-earmark-plus"></i>
+      <h4>No prompts yet</h4>
+      <p><a href="/prompts/create">Submit your first prompt</a></p>
+    </div>
+  <?php else: ?>
+    <div style="display:flex;flex-direction:column;gap:0.625rem;">
+      <?php foreach ($myPrompts as $p):
+        $statusLabel = $statusMap[$p['status_id']] ?? 'pending';
+      ?>
+        <div class="dash-prompt-card">
+          <div class="dash-prompt-thumb">
+            <?php if ($p['image_path']): ?>
+              <img src="<?= e($p['image_path']) ?>" alt="">
+            <?php else: ?>
+              <i class="bi bi-stars"></i>
+            <?php endif; ?>
+          </div>
+          <div class="dash-prompt-body">
+            <div class="dash-prompt-title">
+              <?php if ($statusLabel === 'approved'): ?>
+                <a href="/prompt/<?= e($p['slug']) ?>" style="color:var(--text);"><?= e($p['title']) ?></a>
+              <?php else: ?>
+                <?= e($p['title']) ?>
               <?php endif; ?>
-              <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between gap-1 mb-1">
-                  <h6 class="card-title mb-0">
-                    <?php if ($statusLabel === 'approved'): ?>
-                      <a href="/prompt/<?= e($p['slug']) ?>"><?= e($p['title']) ?></a>
-                    <?php else: ?>
-                      <?= e($p['title']) ?>
-                    <?php endif; ?>
-                  </h6>
-                  <span class="status-badge status-<?= $statusLabel ?> flex-shrink-0">
-                    <?= $statusLabel ?>
-                  </span>
-                </div>
-                <div class="card-stats mt-2">
-                  <span title="Views"><i class="bi bi-eye-fill"></i> <?= (int)$p['views_count'] ?></span>
-                  <span title="Likes"><i class="bi bi-heart-fill text-danger"></i> <?= (int)$p['likes_count'] ?></span>
-                  <span title="Saves"><i class="bi bi-bookmark-fill text-primary"></i> <?= (int)$p['saves_count'] ?></span>
-                  <span title="Copies"><i class="bi bi-clipboard-fill"></i> <?= (int)$p['copies_count'] ?></span>
-                </div>
-                <?php if ($statusLabel !== 'approved'): ?>
-                  <div class="mt-2">
-                    <a href="/prompts/<?= (int)$p['id'] ?>/edit" class="btn btn-sm btn-outline-secondary">
-                      <i class="bi bi-pencil"></i> Edit
-                    </a>
-                  </div>
-                <?php endif; ?>
-              </div>
+            </div>
+            <div class="dash-prompt-meta">
+              <span class="badge badge-<?= $statusLabel ?>"><?= $statusLabel ?></span>
+              <?php if ($statusLabel !== 'approved'): ?>
+                <a href="/prompts/<?= (int)$p['id'] ?>/edit" class="btn btn-sm btn-outline" style="height:24px;padding:0 0.5rem;font-size:0.72rem;">
+                  <i class="bi bi-pencil"></i> Edit
+                </a>
+              <?php endif; ?>
+            </div>
+            <div class="dash-prompt-stats">
+              <span><i class="bi bi-eye-fill"></i> <?= (int)$p['views_count'] ?></span>
+              <span><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= (int)$p['likes_count'] ?></span>
+              <span><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= (int)$p['saves_count'] ?></span>
+              <span><i class="bi bi-clipboard-fill"></i> <?= (int)$p['copies_count'] ?></span>
             </div>
           </div>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </div>
-
-  <!-- Saved -->
-  <div class="tab-pane fade" id="saved">
-    <?php if (empty($savedPrompts)): ?>
-      <div class="empty-state">
-        <div><i class="bi bi-bookmark d-block"></i></div>
-        <h6 class="mt-2">Nothing saved yet</h6>
-        <p class="small">Browse prompts and hit the <strong>Save</strong> button to collect them here.</p>
-      </div>
-    <?php else: ?>
-      <div class="row g-3">
-        <?php foreach ($savedPrompts as $item): require __DIR__ . '/../partials/prompt-card.php'; endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </div>
-
-  <!-- Liked -->
-  <div class="tab-pane fade" id="liked">
-    <?php if (empty($likedPrompts)): ?>
-      <div class="empty-state">
-        <div><i class="bi bi-heart d-block"></i></div>
-        <h6 class="mt-2">No liked prompts</h6>
-        <p class="small">Like prompts to find them quickly here.</p>
-      </div>
-    <?php else: ?>
-      <div class="row g-3">
-        <?php foreach ($likedPrompts as $item): require __DIR__ . '/../partials/prompt-card.php'; endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
 </div>
+
+<!-- Saved -->
+<div class="tab-panel" id="saved">
+  <?php if (empty($savedPrompts)): ?>
+    <div class="empty">
+      <i class="bi bi-bookmark"></i>
+      <h4>Nothing saved yet</h4>
+      <p>Hit <strong>Save</strong> on any prompt to collect it here.</p>
+    </div>
+  <?php else: ?>
+    <div class="prompt-grid">
+      <?php foreach ($savedPrompts as $item): require __DIR__ . '/../partials/prompt-card.php'; endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
+
+<!-- Liked -->
+<div class="tab-panel" id="liked">
+  <?php if (empty($likedPrompts)): ?>
+    <div class="empty">
+      <i class="bi bi-heart"></i>
+      <h4>No liked prompts</h4>
+      <p>Like prompts to find them here quickly.</p>
+    </div>
+  <?php else: ?>
+    <div class="prompt-grid">
+      <?php foreach ($likedPrompts as $item): require __DIR__ . '/../partials/prompt-card.php'; endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
+</script>

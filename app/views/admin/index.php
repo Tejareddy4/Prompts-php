@@ -1,184 +1,171 @@
 <!-- Header -->
-<div class="d-flex align-items-center justify-content-between mb-4 gap-2">
-  <div class="page-header mb-0">
-    <div class="dash-stat-icon purple" style="width:40px;height:40px;border-radius:10px;">
-      <i class="bi bi-shield-check"></i>
-    </div>
-    <h1 style="font-size:1.35rem;">Admin Dashboard</h1>
+<div class="page-hd" style="margin-bottom:1.25rem;">
+  <div style="width:36px;height:36px;border-radius:10px;background:var(--p-l);display:flex;align-items:center;justify-content:center;color:var(--p);">
+    <i class="bi bi-shield-check"></i>
   </div>
-  <a href="/" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to site</a>
+  <h1>Admin Panel</h1>
+  <a href="/" class="btn btn-sm btn-outline" style="margin-left:auto;"><i class="bi bi-arrow-left"></i> Site</a>
 </div>
 
-<!-- Analytics -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="admin-stat-card">
-      <div class="stat-value text-primary"><?= (int)$analytics['total_prompts'] ?></div>
-      <div class="stat-label">Total Prompts</div>
-    </div>
+<!-- Stats -->
+<div class="admin-stats">
+  <div class="admin-stat">
+    <div class="admin-stat-val" style="color:var(--p);"><?= (int)$analytics['total_prompts'] ?></div>
+    <div class="admin-stat-lbl">Total</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="admin-stat-card">
-      <div class="stat-value text-warning"><?= (int)$analytics['pending_prompts'] ?></div>
-      <div class="stat-label">Pending Review</div>
-    </div>
+  <div class="admin-stat">
+    <div class="admin-stat-val" style="color:var(--warning);"><?= (int)$analytics['pending_prompts'] ?></div>
+    <div class="admin-stat-lbl">Pending</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="admin-stat-card">
-      <div class="stat-value text-success"><?= (int)$analytics['approved_prompts'] ?></div>
-      <div class="stat-label">Published</div>
-    </div>
+  <div class="admin-stat">
+    <div class="admin-stat-val" style="color:var(--success);"><?= (int)$analytics['approved_prompts'] ?></div>
+    <div class="admin-stat-lbl">Published</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="admin-stat-card">
-      <div class="stat-value text-danger"><?= (int)$analytics['total_likes'] ?></div>
-      <div class="stat-label">Total Likes</div>
-    </div>
+  <div class="admin-stat">
+    <div class="admin-stat-val" style="color:var(--danger);"><?= (int)$analytics['total_likes'] ?></div>
+    <div class="admin-stat-lbl">Total Likes</div>
   </div>
 </div>
 
 <!-- Tabs -->
-<ul class="nav nav-tabs" id="adminTabs" role="tablist">
-  <li class="nav-item">
-    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-pending">
-      Pending <span class="badge bg-warning text-dark ms-1" style="font-size:.7rem;"><?= count($pending) ?></span>
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-approved">
-      Approved <span class="badge bg-success ms-1" style="font-size:.7rem;"><?= count($approved) ?></span>
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rejected">
-      Rejected <span class="badge bg-danger ms-1" style="font-size:.7rem;"><?= count($rejected) ?></span>
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users">
-      Users <span class="badge bg-secondary ms-1" style="font-size:.7rem;"><?= count($users) ?></span>
-    </button>
-  </li>
-</ul>
+<div class="tabs" id="adminTabs">
+  <button class="tab-btn active" data-target="tab-pending">
+    Pending <span class="tab-badge"><?= count($pending) ?></span>
+  </button>
+  <button class="tab-btn" data-target="tab-approved">
+    Approved <span class="tab-badge"><?= count($approved) ?></span>
+  </button>
+  <button class="tab-btn" data-target="tab-rejected">
+    Rejected <span class="tab-badge"><?= count($rejected) ?></span>
+  </button>
+  <button class="tab-btn" data-target="tab-users">
+    Users <span class="tab-badge"><?= count($users) ?></span>
+  </button>
+</div>
 
-<div class="tab-content">
-  <?php
-  $sections = ['pending' => $pending, 'approved' => $approved, 'rejected' => $rejected];
-  foreach ($sections as $key => $rows):
-  ?>
-  <div class="tab-pane fade <?= $key === 'pending' ? 'show active' : '' ?>" id="tab-<?= $key ?>">
-    <?php if (empty($rows)): ?>
-      <div class="empty-state py-4">
-        <i class="bi bi-check-circle d-block"></i>
-        <p class="mt-2 small">No <?= $key ?> prompts.</p>
-      </div>
-    <?php else: ?>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($rows as $r): ?>
-              <tr>
-                <td>
-                  <?php if ($key === 'approved'): ?>
-                    <a href="/prompt/<?= e($r['slug']) ?>" target="_blank" class="fw-medium text-decoration-none">
-                      <?= e($r['title']) ?> <i class="bi bi-box-arrow-up-right" style="font-size:.7rem;"></i>
-                    </a>
-                  <?php else: ?>
-                    <span class="fw-medium"><?= e($r['title']) ?></span>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="avatar-xs"><?= strtoupper(substr($r['author'] ?? 'U', 0, 2)) ?></span>
-                    <span class="text-muted small"><?= e($r['author']) ?></span>
-                  </div>
-                </td>
-                <td class="text-muted small"><?= date('M j, Y', strtotime($r['created_at'])) ?></td>
-                <td>
-                  <div class="d-flex gap-1 flex-wrap">
-                    <?php if ($key !== 'approved'): ?>
-                      <form class="d-inline" method="post" action="/admin/prompts/approve">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                        <button class="btn btn-success btn-sm">
-                          <i class="bi bi-check-lg"></i> Approve
-                        </button>
-                      </form>
-                    <?php endif; ?>
-                    <?php if ($key !== 'rejected'): ?>
-                      <form class="d-inline" method="post" action="/admin/prompts/reject">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                        <button class="btn btn-warning btn-sm text-dark">
-                          <i class="bi bi-x-lg"></i> Reject
-                        </button>
-                      </form>
-                    <?php endif; ?>
-                    <form class="d-inline" method="post" action="/admin/prompts/delete"
-                          onsubmit="return confirm('Delete this prompt permanently?')">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                      <button class="btn btn-danger btn-sm">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    <?php endif; ?>
-  </div>
-  <?php endforeach; ?>
-
-  <!-- Users tab -->
-  <div class="tab-pane fade" id="tab-users">
-    <div class="table-responsive">
-      <table class="data-table">
+<?php
+$sections = [
+  'tab-pending'  => ['rows' => $pending,  'label' => 'pending'],
+  'tab-approved' => ['rows' => $approved, 'label' => 'approved'],
+  'tab-rejected' => ['rows' => $rejected, 'label' => 'rejected'],
+];
+foreach ($sections as $tabId => $section):
+  $rows = $section['rows'];
+  $key  = $section['label'];
+?>
+<div class="tab-panel <?= $tabId === 'tab-pending' ? 'active' : '' ?>" id="<?= $tabId ?>">
+  <?php if (empty($rows)): ?>
+    <div class="empty" style="padding:2rem 0;">
+      <i class="bi bi-check-circle"></i>
+      <p>No <?= $key ?> prompts.</p>
+    </div>
+  <?php else: ?>
+    <div class="table-wrap">
+      <table class="admin-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Joined</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th style="min-width:140px;">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($users as $u): ?>
+          <?php foreach ($rows as $r): ?>
             <tr>
-              <td class="text-muted small"><?= (int)$u['id'] ?></td>
               <td>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="avatar-xs"><?= strtoupper(substr($u['name'] ?? 'U', 0, 2)) ?></span>
-                  <?= e($u['name']) ?>
+                <?php if ($key === 'approved'): ?>
+                  <a href="/prompt/<?= e($r['slug']) ?>" target="_blank" style="font-weight:600;color:var(--text);">
+                    <?= e($r['title']) ?> <i class="bi bi-box-arrow-up-right" style="font-size:.65rem;color:var(--muted);"></i>
+                  </a>
+                <?php else: ?>
+                  <span style="font-weight:600;"><?= e($r['title']) ?></span>
+                <?php endif; ?>
+                <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;"><?= date('M j, Y', strtotime($r['created_at'])) ?></div>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:0.375rem;">
+                  <span class="avatar avatar-xs"><?= strtoupper(substr($r['author'] ?? 'U', 0, 2)) ?></span>
+                  <span style="font-size:0.8125rem;"><?= e($r['author']) ?></span>
                 </div>
               </td>
-              <td class="text-muted small"><?= e($u['email']) ?></td>
               <td>
-                <?php if ($u['role_name'] === 'super_admin'): ?>
-                  <span class="badge text-bg-warning">Admin</span>
-                <?php else: ?>
-                  <span class="badge text-bg-light text-secondary">User</span>
-                <?php endif; ?>
-              </td>
-              <td class="text-muted small">
-                <?= !empty($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?>
+                <div style="display:flex;gap:0.375rem;flex-wrap:wrap;">
+                  <?php if ($key !== 'approved'): ?>
+                    <form class="d-inline" method="post" action="/admin/prompts/approve">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
+                      <button class="btn btn-sm" style="background:#DCFCE7;color:#166534;border-color:#BBF7D0;">
+                        <i class="bi bi-check-lg"></i> Approve
+                      </button>
+                    </form>
+                  <?php endif; ?>
+                  <?php if ($key !== 'rejected'): ?>
+                    <form class="d-inline" method="post" action="/admin/prompts/reject">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
+                      <button class="btn btn-sm" style="background:#FEF9C3;color:#854D0E;border-color:#FDE68A;">
+                        <i class="bi bi-x-lg"></i> Reject
+                      </button>
+                    </form>
+                  <?php endif; ?>
+                  <form method="post" action="/admin/prompts/delete" onsubmit="return confirm('Delete permanently?')">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
+                    <button class="btn btn-sm btn-danger-outline"><i class="bi bi-trash"></i></button>
+                  </form>
+                </div>
               </td>
             </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
     </div>
+  <?php endif; ?>
+</div>
+<?php endforeach; ?>
+
+<!-- Users -->
+<div class="tab-panel" id="tab-users">
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+      </thead>
+      <tbody>
+        <?php foreach ($users as $u): ?>
+          <tr>
+            <td style="color:var(--muted);font-size:0.8rem;"><?= (int)$u['id'] ?></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.375rem;">
+                <span class="avatar avatar-xs"><?= strtoupper(substr($u['name'] ?? 'U', 0, 2)) ?></span>
+                <span style="font-weight:600;font-size:0.875rem;"><?= e($u['name']) ?></span>
+              </div>
+            </td>
+            <td style="font-size:0.8rem;color:var(--muted);"><?= e($u['email']) ?></td>
+            <td>
+              <?php if ($u['role_name'] === 'super_admin'): ?>
+                <span class="badge badge-admin">Admin</span>
+              <?php else: ?>
+                <span class="badge badge-user">User</span>
+              <?php endif; ?>
+            </td>
+            <td style="font-size:0.8rem;color:var(--muted);">
+              <?= !empty($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
   </div>
 </div>
+
+<script>
+document.querySelectorAll('#adminTabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#adminTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#adminTabs ~ .tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
+</script>

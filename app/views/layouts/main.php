@@ -1,14 +1,15 @@
-<?php $user = auth_user(); ?>
+<?php
+$user = auth_user();
+$currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7C3AED">
   <title><?= e($pageTitle ?? config('app.name')) ?> | <?= e(config('app.name')) ?></title>
-  <meta name="description" content="<?= e($metaDescription ?? 'Share and discover high-performing AI prompts.') ?>">
-  <meta property="og:title" content="<?= e($pageTitle ?? config('app.name')) ?>">
-  <meta property="og:description" content="<?= e($metaDescription ?? 'Discover and share prompts.') ?>">
-  <meta property="og:type" content="website">
+  <meta name="description" content="<?= e($metaDescription ?? 'Discover and share high-performing AI prompts for ChatGPT, Claude, Gemini & more.') ?>">
   <?php if (!empty($prompt['image_path'])): ?>
     <meta property="og:image" content="<?= e(config('app.base_url') . $prompt['image_path']) ?>">
   <?php endif; ?>
@@ -21,79 +22,146 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg sticky-top site-nav">
+<!-- ── Top navbar ─────────────────────────────────────────────── -->
+<nav class="site-nav">
   <div class="container">
-    <a class="navbar-brand" href="/">
+    <a class="brand" href="/">
       <span class="brand-icon"><i class="bi bi-lightning-fill"></i></span>
       PromptShare
     </a>
 
-    <div class="ms-auto d-flex gap-2 align-items-center">
-      <a class="btn btn-outline-light nav-btn" href="/">Explore</a>
-
+    <!-- Desktop nav -->
+    <div class="nav-desktop">
+      <a href="/" class="nbtn nbtn-ghost">Explore</a>
       <?php if ($user): ?>
-        <a class="btn btn-primary nav-btn" href="/prompts/create">
+        <a href="/prompts/create" class="nbtn nbtn-outline">
           <i class="bi bi-plus-lg"></i> Submit
         </a>
         <div class="dropdown">
-          <button class="btn btn-outline-light nav-btn dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-            <span class="avatar-xs"><?= strtoupper(substr($user['name'] ?? 'U', 0, 2)) ?></span>
+          <button class="nbtn nbtn-ghost dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                  style="display:flex;align-items:center;gap:0.4rem;">
+            <span class="avatar avatar-xs"><?= strtoupper(substr($user['name'] ?? 'U', 0, 2)) ?></span>
             <?= e(explode(' ', $user['name'])[0]) ?>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <span class="dropdown-item-text small text-secondary px-3 pt-1"><?= e($user['email'] ?? '') ?></span>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-grid me-2"></i>My Dashboard</a></li>
-            <li><a class="dropdown-item" href="/prompts/create"><i class="bi bi-plus-circle me-2"></i>Submit Prompt</a></li>
+            <li><span class="dropdown-item-label"><?= e($user['email'] ?? '') ?></span></li>
+            <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li><a class="dropdown-item" href="/prompts/create"><i class="bi bi-plus-circle"></i> Submit prompt</a></li>
             <?php if (($user['role_name'] ?? '') === 'super_admin'): ?>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-warning" href="/admin"><i class="bi bi-shield-check me-2"></i>Admin Panel</a></li>
+              <li><a class="dropdown-item" href="/admin" style="color:var(--p)"><i class="bi bi-shield-check"></i> Admin panel</a></li>
             <?php endif; ?>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <form method="post" action="/logout" class="px-2">
+              <form method="post" action="/logout" style="padding:0.25rem 0.375rem;">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                  <i class="bi bi-box-arrow-right me-1"></i> Logout
+                <button type="submit" class="btn btn-sm btn-danger-outline btn-full" style="border-radius:var(--r-xs);">
+                  <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
               </form>
             </li>
           </ul>
         </div>
       <?php else: ?>
-        <a class="btn btn-outline-light nav-btn" href="/login">Login</a>
-        <a class="btn btn-primary nav-btn" href="/register">Sign up free</a>
+        <a href="/login" class="nbtn nbtn-ghost">Login</a>
+        <a href="/register" class="nbtn nbtn-primary">Sign up free</a>
+      <?php endif; ?>
+    </div>
+
+    <!-- Mobile: just submit or sign up -->
+    <div class="nav-mobile-right">
+      <?php if ($user): ?>
+        <a href="/prompts/create" class="nbtn nbtn-primary" style="height:32px;padding:0 0.75rem;font-size:0.75rem;">
+          <i class="bi bi-plus-lg"></i> Submit
+        </a>
+      <?php else: ?>
+        <a href="/register" class="nbtn nbtn-primary" style="height:32px;padding:0 0.75rem;font-size:0.75rem;">Sign up</a>
       <?php endif; ?>
     </div>
   </div>
 </nav>
 
-<main class="container py-4">
-  <?php $flash = flash_get(); if ($flash): ?>
-    <div class="flash-bar flash-<?= e($flash['type']) ?> mb-4">
+<!-- ── Page content ───────────────────────────────────────────── -->
+<main class="site-main">
+  <div class="container">
+    <?php $flash = flash_get(); if ($flash): ?>
       <?php
-        $icons = ['success' => 'check-circle-fill', 'error' => 'x-circle-fill', 'warning' => 'exclamation-triangle-fill', 'info' => 'info-circle-fill'];
+        $icons = ['success'=>'check-circle-fill','error'=>'x-circle-fill','warning'=>'exclamation-triangle-fill','info'=>'info-circle-fill'];
         $icon = $icons[$flash['type']] ?? 'info-circle-fill';
       ?>
-      <i class="bi bi-<?= $icon ?>"></i>
-      <?= e($flash['message']) ?>
-    </div>
-  <?php endif; ?>
-
-  <?php require $viewPath; ?>
+      <div class="flash flash-<?= e($flash['type']) ?>">
+        <i class="bi bi-<?= $icon ?>"></i>
+        <?= e($flash['message']) ?>
+      </div>
+    <?php endif; ?>
+    <?php require $viewPath; ?>
+  </div>
 </main>
 
+<!-- ── Footer (desktop only) ─────────────────────────────────── -->
 <footer class="site-footer">
-  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
-    <span>© <?= date('Y') ?> <strong style="color:rgba(255,255,255,.7)">PromptShare</strong> &mdash; Discover &amp; share AI prompts</span>
-    <div class="d-flex gap-3">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+    <span>&copy; <?= date('Y') ?> <strong style="color:rgba(255,255,255,.7)">PromptShare</strong> &mdash; Discover &amp; share AI prompts</span>
+    <div style="display:flex;gap:1.25rem;">
       <a href="/">Explore</a>
       <a href="/prompts/create">Submit</a>
     </div>
   </div>
 </footer>
+
+<!-- ── Bottom nav (mobile only) ──────────────────────────────── -->
+<nav class="bottom-nav">
+  <a href="/" class="bnav-item <?= $currentPath === '/' ? 'active' : '' ?>">
+    <i class="bi bi-<?= $currentPath === '/' ? 'house-fill' : 'house' ?>"></i>
+    Home
+  </a>
+
+  <?php if ($user): ?>
+    <a href="/prompts/create" class="bnav-submit">
+      <div class="bnav-submit-pill"><i class="bi bi-plus-lg"></i></div>
+      <span>Submit</span>
+    </a>
+    <a href="/dashboard" class="bnav-item <?= str_starts_with($currentPath, '/dashboard') ? 'active' : '' ?>">
+      <i class="bi bi-<?= str_starts_with($currentPath, '/dashboard') ? 'grid-fill' : 'grid' ?>"></i>
+      Dashboard
+    </a>
+    <?php if (($user['role_name'] ?? '') === 'super_admin'): ?>
+      <a href="/admin" class="bnav-item <?= str_starts_with($currentPath, '/admin') ? 'active' : '' ?>">
+        <i class="bi bi-shield<?= str_starts_with($currentPath, '/admin') ? '-fill' : '' ?>"></i>
+        Admin
+      </a>
+    <?php else: ?>
+      <div class="dropdown" style="flex:1;">
+        <button class="bnav-item w-100" data-bs-toggle="dropdown" aria-expanded="false" style="width:100%;">
+          <span class="avatar avatar-xs"><?= strtoupper(substr($user['name'] ?? 'U', 0, 2)) ?></span>
+          <?= e(explode(' ', $user['name'])[0]) ?>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><span class="dropdown-item-label"><?= e($user['email'] ?? '') ?></span></li>
+          <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="post" action="/logout" style="padding:0.25rem 0.375rem;">
+              <?= csrf_field() ?>
+              <button type="submit" class="btn btn-sm btn-danger-outline btn-full" style="border-radius:var(--r-xs);">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    <?php endif; ?>
+  <?php else: ?>
+    <a href="/login" class="bnav-item <?= $currentPath === '/login' ? 'active' : '' ?>">
+      <i class="bi bi-person<?= $currentPath === '/login' ? '-fill' : '' ?>"></i>
+      Login
+    </a>
+    <a href="/register" class="bnav-item <?= $currentPath === '/register' ? 'active' : '' ?>">
+      <i class="bi bi-person-plus<?= $currentPath === '/register' ? '-fill' : '' ?>"></i>
+      Sign up
+    </a>
+  <?php endif; ?>
+</nav>
 
 <script>window.CSRF_TOKEN = '<?= e(App\Core\Csrf::token()) ?>';</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

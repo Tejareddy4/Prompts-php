@@ -1,55 +1,47 @@
-<div class="row justify-content-center">
-  <div class="col-lg-8">
-    <div class="page-header">
-      <a href="/dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
-      <h1>Submit a Prompt</h1>
+<div class="page-hd">
+  <a href="/dashboard" class="btn btn-sm btn-outline btn-icon"><i class="bi bi-arrow-left"></i></a>
+  <h1>Submit a Prompt</h1>
+</div>
+
+<div class="form-card">
+  <p style="font-size:0.8125rem;color:var(--muted);margin-bottom:1.25rem;padding:0.75rem;background:var(--p-xl);border-radius:var(--r-sm);">
+    <i class="bi bi-info-circle" style="color:var(--p);"></i>
+    Your prompt will be reviewed before going live. Usually within a few hours.
+  </p>
+
+  <form method="post" action="/prompts" enctype="multipart/form-data">
+    <?= csrf_field() ?>
+
+    <div class="field">
+      <label for="title">Title <span class="req">*</span></label>
+      <input class="input" id="title" type="text" name="title"
+             placeholder="e.g. Expert TypeScript code reviewer" maxlength="160" required>
+      <div class="hint">Clear, descriptive titles get discovered more.</div>
     </div>
 
-    <div class="form-card">
-      <p class="text-muted small mb-4">
-        <i class="bi bi-info-circle me-1"></i>
-        Your prompt will be reviewed by our team before appearing publicly. Usually takes a few hours.
-      </p>
-
-      <form method="post" action="/prompts" enctype="multipart/form-data">
-        <?= csrf_field() ?>
-
-        <div class="mb-3">
-          <label for="title" class="form-label">Prompt title <span class="text-danger">*</span></label>
-          <input id="title" class="form-control" type="text" name="title"
-                 placeholder="e.g. Expert code reviewer for TypeScript" maxlength="160" required>
-          <div class="form-text">A clear, descriptive title helps others find your prompt.</div>
-        </div>
-
-        <div class="mb-3">
-          <label for="description" class="form-label">Short description</label>
-          <textarea id="description" class="form-control" name="description" rows="2"
-                    placeholder="What does this prompt do? Who is it for?" maxlength="500"></textarea>
-          <div class="form-text">Optional but recommended — shown in search results.</div>
-        </div>
-
-        <div class="mb-3">
-          <label for="prompt_text" class="form-label">Prompt text <span class="text-danger">*</span></label>
-          <textarea id="prompt_text" class="form-control" name="prompt_text" rows="10"
-                    placeholder="Write your full prompt here..." required
-                    style="font-family: monospace; font-size: .875rem;"></textarea>
-          <div class="form-text">Write the exact prompt text that users will copy and use.</div>
-        </div>
-
-        <div class="mb-4">
-          <label for="image" class="form-label">Cover image <span class="text-muted">(optional)</span></label>
-          <input id="image" class="form-control" type="file" name="image"
-                 accept="image/jpeg,image/png,image/webp">
-          <div class="form-text">JPEG, PNG, or WebP — max 5MB. Helps your prompt stand out.</div>
-        </div>
-
-        <div class="d-flex gap-2 justify-content-end">
-          <a href="/dashboard" class="btn btn-outline-secondary">Cancel</a>
-          <button class="btn btn-primary px-4" type="submit">
-            <i class="bi bi-send me-1"></i> Submit for review
-          </button>
-        </div>
-      </form>
+    <div class="field">
+      <label for="description">Short description</label>
+      <textarea class="textarea" id="description" name="description" rows="2"
+                placeholder="What does this prompt do? Who is it for?" maxlength="500"></textarea>
     </div>
-  </div>
+
+    <div class="field">
+      <label for="prompt_text">Prompt text <span class="req">*</span></label>
+      <textarea class="textarea textarea-code" id="prompt_text" name="prompt_text" rows="10"
+                placeholder="Write your full prompt here..." required></textarea>
+    </div>
+
+    <div class="field">
+      <label for="image">Cover image <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+      <input class="file-input" id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp">
+      <div class="hint">JPEG, PNG or WebP — max 5MB</div>
+    </div>
+
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;padding-top:0.5rem;">
+      <a href="/dashboard" class="btn btn-outline">Cancel</a>
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-send"></i> Submit for review
+      </button>
+    </div>
+  </form>
 </div>

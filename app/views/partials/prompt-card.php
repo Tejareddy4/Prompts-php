@@ -1,29 +1,24 @@
-<div class="col-12 col-md-6 col-lg-4">
-  <div class="prompt-card">
-    <div class="card-img-wrap">
-      <?php if (!empty($item['image_path'])): ?>
-        <img loading="lazy" src="<?= e($item['image_path']) ?>" alt="<?= e($item['title']) ?>">
-      <?php else: ?>
-        <span class="card-img-placeholder"><i class="bi bi-stars"></i></span>
-      <?php endif; ?>
+<a href="/prompt/<?= e($item['slug']) ?>" class="pcard">
+  <div class="pcard-thumb">
+    <?php if (!empty($item['image_path'])): ?>
+      <img loading="lazy" src="<?= e($item['image_path']) ?>" alt="<?= e($item['title']) ?>">
+    <?php else: ?>
+      <i class="bi bi-stars"></i>
+    <?php endif; ?>
+  </div>
+  <div class="pcard-body">
+    <div class="pcard-title"><?= e($item['title']) ?></div>
+    <?php if (!empty($item['description'])): ?>
+      <div class="pcard-desc"><?= e($item['description']) ?></div>
+    <?php endif; ?>
+    <div class="pcard-author">
+      <span class="avatar avatar-xs"><?= strtoupper(substr($item['author'] ?? 'U', 0, 2)) ?></span>
+      <?= e($item['author'] ?? 'Unknown') ?>
     </div>
-    <div class="card-body">
-      <h6 class="card-title">
-        <a href="/prompt/<?= e($item['slug']) ?>"><?= e($item['title']) ?></a>
-      </h6>
-      <?php if (!empty($item['description'])): ?>
-        <p class="card-desc"><?= e($item['description']) ?></p>
-      <?php endif; ?>
-      <div class="card-author">
-        <span class="avatar-xs"><?= strtoupper(substr($item['author'] ?? 'U', 0, 2)) ?></span>
-        <span class="small text-muted"><?= e($item['author'] ?? 'Unknown') ?></span>
-      </div>
-      <div class="card-stats">
-        <span title="Likes"><i class="bi bi-heart-fill text-danger"></i> <?= (int)($item['likes_count'] ?? 0) ?></span>
-        <span title="Saves"><i class="bi bi-bookmark-fill text-primary"></i> <?= (int)($item['saves_count'] ?? 0) ?></span>
-        <span title="Copies"><i class="bi bi-clipboard-fill text-secondary"></i> <?= (int)($item['copies_count'] ?? 0) ?></span>
-        <span title="Views" class="ms-auto"><i class="bi bi-eye-fill"></i> <?= (int)($item['views_count'] ?? 0) ?></span>
-      </div>
+    <div class="pcard-stats">
+      <span title="Likes"><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= (int)($item['likes_count'] ?? 0) ?></span>
+      <span title="Saves"><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= (int)($item['saves_count'] ?? 0) ?></span>
+      <span title="Views" style="margin-left:auto;"><i class="bi bi-eye-fill"></i> <?= (int)($item['views_count'] ?? 0) ?></span>
     </div>
   </div>
-</div>
+</a>
