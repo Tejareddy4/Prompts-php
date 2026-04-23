@@ -10,11 +10,11 @@ return [
         'session_name' => 'promptshare_session',
     ],
     'db' => [
-        'host' => '127.0.0.1',
+        'host' => 'localhost',
         'port' => 3306,
-        'database' => 'promptshare',   // ← your DB name
-        'username' => 'root',           // ← your DB username
-        'password' => '',               // ← your DB password  ⚠️ FILL THIS IN
+        'database' => 'promptshare',
+        'username' => 'root',
+        'password' => '',
         'charset' => 'utf8mb4',
     ],
     'upload' => [
