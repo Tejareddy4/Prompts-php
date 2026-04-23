@@ -12,9 +12,9 @@ return [
     'db' => [
         'host' => '127.0.0.1',
         'port' => 3306,
-        'database' => 'promptshare',
-        'username' => 'root',
-        'password' => '',
+        'database' => 'promptshare',   // ← your DB name
+        'username' => 'root',           // ← your DB username
+        'password' => '',               // ← your DB password  ⚠️ FILL THIS IN
         'charset' => 'utf8mb4',
     ],
     'upload' => [
