@@ -1,171 +1,236 @@
-<!-- Header -->
-<div class="page-hd" style="margin-bottom:1.25rem;">
-  <div style="width:36px;height:36px;border-radius:10px;background:var(--p-l);display:flex;align-items:center;justify-content:center;color:var(--p);">
-    <i class="bi bi-shield-check"></i>
-  </div>
-  <h1>Admin Panel</h1>
-  <a href="/" class="btn btn-sm btn-outline" style="margin-left:auto;"><i class="bi bi-arrow-left"></i> Site</a>
-</div>
-
-<!-- Stats -->
-<div class="admin-stats">
-  <div class="admin-stat">
-    <div class="admin-stat-val" style="color:var(--p);"><?= (int)$analytics['total_prompts'] ?></div>
-    <div class="admin-stat-lbl">Total</div>
-  </div>
-  <div class="admin-stat">
-    <div class="admin-stat-val" style="color:var(--warning);"><?= (int)$analytics['pending_prompts'] ?></div>
-    <div class="admin-stat-lbl">Pending</div>
-  </div>
-  <div class="admin-stat">
-    <div class="admin-stat-val" style="color:var(--success);"><?= (int)$analytics['approved_prompts'] ?></div>
-    <div class="admin-stat-lbl">Published</div>
-  </div>
-  <div class="admin-stat">
-    <div class="admin-stat-val" style="color:var(--danger);"><?= (int)$analytics['total_likes'] ?></div>
-    <div class="admin-stat-lbl">Total Likes</div>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tabs" id="adminTabs">
-  <button class="tab-btn active" data-target="tab-pending">
-    Pending <span class="tab-badge"><?= count($pending) ?></span>
-  </button>
-  <button class="tab-btn" data-target="tab-approved">
-    Approved <span class="tab-badge"><?= count($approved) ?></span>
-  </button>
-  <button class="tab-btn" data-target="tab-rejected">
-    Rejected <span class="tab-badge"><?= count($rejected) ?></span>
-  </button>
-  <button class="tab-btn" data-target="tab-users">
-    Users <span class="tab-badge"><?= count($users) ?></span>
-  </button>
-</div>
-
 <?php
-$sections = [
-  'tab-pending'  => ['rows' => $pending,  'label' => 'pending'],
-  'tab-approved' => ['rows' => $approved, 'label' => 'approved'],
-  'tab-rejected' => ['rows' => $rejected, 'label' => 'rejected'],
-];
-foreach ($sections as $tabId => $section):
-  $rows = $section['rows'];
-  $key  = $section['label'];
+// Encode trend data for chart
+$trendJson = json_encode($trend);
+$pendingCount = count($pending);
 ?>
-<div class="tab-panel <?= $tabId === 'tab-pending' ? 'active' : '' ?>" id="<?= $tabId ?>">
-  <?php if (empty($rows)): ?>
-    <div class="empty" style="padding:2rem 0;">
-      <i class="bi bi-check-circle"></i>
-      <p>No <?= $key ?> prompts.</p>
+
+<div class="adm-wrap">
+
+  <!-- Sidebar -->
+  <?php require __DIR__ . '/../partials/admin-sidebar.php'; ?>
+
+  <!-- Main content -->
+  <div class="adm-main">
+
+    <!-- Header bar -->
+    <div class="adm-topbar">
+      <div>
+        <h1 class="adm-page-title">Dashboard</h1>
+        <p class="adm-page-sub">Welcome back — here's what's happening on PromptShare.</p>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <?php if ($pendingCount > 0): ?>
+          <a href="/admin/prompts" class="adm-alert-pill">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <?= $pendingCount ?> pending review
+          </a>
+        <?php endif; ?>
+        <a href="/" class="nbtn nbtn-ghost" target="_blank" style="font-size:.8rem;">
+          <i class="bi bi-box-arrow-up-right"></i> View site
+        </a>
+      </div>
     </div>
-  <?php else: ?>
-    <div class="table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th style="min-width:140px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($rows as $r): ?>
+
+    <!-- KPI cards -->
+    <div class="adm-kpi-grid">
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon ic-purple"><i class="bi bi-file-text-fill"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= number_format($analytics['total_prompts']) ?></div>
+          <div class="adm-kpi-lbl">Total prompts</div>
+          <div class="adm-kpi-sub"><span class="kpi-up"><?= $analytics['approved_prompts'] ?> live</span> · <?= $analytics['pending_prompts'] ?> pending</div>
+        </div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon ic-blue"><i class="bi bi-people-fill"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= number_format($userStats['total']) ?></div>
+          <div class="adm-kpi-lbl">Total users</div>
+          <div class="adm-kpi-sub"><span class="kpi-up">+<?= $userStats['today'] ?> today</span> · <?= $userStats['this_week'] ?> this week</div>
+        </div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon ic-orange"><i class="bi bi-heart-fill"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= number_format($analytics['total_likes']) ?></div>
+          <div class="adm-kpi-lbl">Total likes</div>
+          <div class="adm-kpi-sub">Across all prompts</div>
+        </div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon ic-green"><i class="bi bi-eye-fill"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= number_format($analytics['total_views']) ?></div>
+          <div class="adm-kpi-lbl">Total views</div>
+          <div class="adm-kpi-sub">Unique sessions</div>
+        </div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-icon ic-teal"><i class="bi bi-google"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= $userStats['google_oauth'] ?></div>
+          <div class="adm-kpi-lbl">Google signups</div>
+          <div class="adm-kpi-sub"><?= $userStats['total'] > 0 ? round(($userStats['google_oauth'] / $userStats['total']) * 100) : 0 ?>% of users</div>
+        </div>
+      </div>
+      <div class="adm-kpi adm-kpi-action" onclick="window.location='/admin/prompts'">
+        <div class="adm-kpi-icon ic-warn"><i class="bi bi-clock-fill"></i></div>
+        <div class="adm-kpi-body">
+          <div class="adm-kpi-val"><?= $pendingCount ?></div>
+          <div class="adm-kpi-lbl">Awaiting review</div>
+          <div class="adm-kpi-sub" style="color:var(--warning);">Click to moderate →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart + Recent users -->
+    <div class="adm-two-col">
+
+      <!-- 14-day engagement chart -->
+      <div class="adm-card" style="flex:1.6;">
+        <div class="adm-card-head">
+          <h2>14-day engagement</h2>
+          <div class="chart-legend">
+            <span class="cl-dot" style="background:#7C3AED;"></span>Views
+            <span class="cl-dot" style="background:#EF4444;"></span>Likes
+            <span class="cl-dot" style="background:#10B981;"></span>Signups
+          </div>
+        </div>
+        <div class="adm-card-body">
+          <canvas id="trendChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent signups -->
+      <div class="adm-card" style="flex:1;">
+        <div class="adm-card-head">
+          <h2>Recent signups</h2>
+          <a href="/admin/users" class="adm-link">View all</a>
+        </div>
+        <div class="adm-card-body" style="padding:0;">
+          <?php foreach ($recentUsers as $u): ?>
+          <div class="adm-user-row">
+            <div class="adm-user-avatar">
+              <?php if (!empty($u['avatar_url'])): ?>
+                <img src="<?= e($u['avatar_url']) ?>" alt="">
+              <?php else: ?>
+                <?= strtoupper(substr($u['name'] ?? 'U', 0, 2)) ?>
+              <?php endif; ?>
+            </div>
+            <div class="adm-user-info">
+              <div class="adm-user-name"><?= e($u['name']) ?></div>
+              <div class="adm-user-email"><?= e($u['email']) ?></div>
+            </div>
+            <div class="adm-user-meta">
+              <?php if (!empty($u['google_id'])): ?>
+                <span class="badge-mini badge-google"><i class="bi bi-google"></i> Google</span>
+              <?php endif; ?>
+              <div class="adm-user-date"><?= date('M j', strtotime($u['created_at'])) ?></div>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending prompts quick-action -->
+    <?php if (!empty($pending)): ?>
+    <div class="adm-card">
+      <div class="adm-card-head">
+        <h2><i class="bi bi-clock" style="color:var(--warning);"></i> Prompts awaiting review</h2>
+        <a href="/admin/prompts" class="adm-link">View all prompts</a>
+      </div>
+      <div class="adm-card-body" style="padding:0;">
+        <table class="adm-table">
+          <thead><tr><th>Title</th><th>Author</th><th>Submitted</th><th>Actions</th></tr></thead>
+          <tbody>
+          <?php foreach (array_slice($pending, 0, 5) as $p): ?>
             <tr>
+              <td><span class="adm-prompt-title"><?= e($p['title']) ?></span></td>
+              <td><span class="adm-muted"><?= e($p['author']) ?></span></td>
+              <td><span class="adm-muted"><?= date('M j, g:ia', strtotime($p['created_at'])) ?></span></td>
               <td>
-                <?php if ($key === 'approved'): ?>
-                  <a href="/prompt/<?= e($r['slug']) ?>" target="_blank" style="font-weight:600;color:var(--text);">
-                    <?= e($r['title']) ?> <i class="bi bi-box-arrow-up-right" style="font-size:.65rem;color:var(--muted);"></i>
-                  </a>
-                <?php else: ?>
-                  <span style="font-weight:600;"><?= e($r['title']) ?></span>
-                <?php endif; ?>
-                <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;"><?= date('M j, Y', strtotime($r['created_at'])) ?></div>
-              </td>
-              <td>
-                <div style="display:flex;align-items:center;gap:0.375rem;">
-                  <span class="avatar avatar-xs"><?= strtoupper(substr($r['author'] ?? 'U', 0, 2)) ?></span>
-                  <span style="font-size:0.8125rem;"><?= e($r['author']) ?></span>
-                </div>
-              </td>
-              <td>
-                <div style="display:flex;gap:0.375rem;flex-wrap:wrap;">
-                  <?php if ($key !== 'approved'): ?>
-                    <form class="d-inline" method="post" action="/admin/prompts/approve">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                      <button class="btn btn-sm" style="background:#DCFCE7;color:#166534;border-color:#BBF7D0;">
-                        <i class="bi bi-check-lg"></i> Approve
-                      </button>
-                    </form>
-                  <?php endif; ?>
-                  <?php if ($key !== 'rejected'): ?>
-                    <form class="d-inline" method="post" action="/admin/prompts/reject">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                      <button class="btn btn-sm" style="background:#FEF9C3;color:#854D0E;border-color:#FDE68A;">
-                        <i class="bi bi-x-lg"></i> Reject
-                      </button>
-                    </form>
-                  <?php endif; ?>
-                  <form method="post" action="/admin/prompts/delete" onsubmit="return confirm('Delete permanently?')">
+                <div style="display:flex;gap:.375rem;">
+                  <form method="post" action="/admin/prompts/approve" style="display:inline;">
                     <?= csrf_field() ?>
-                    <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
-                    <button class="btn btn-sm btn-danger-outline"><i class="bi bi-trash"></i></button>
+                    <input type="hidden" name="prompt_id" value="<?= (int)$p['id'] ?>">
+                    <button class="adm-btn adm-btn-approve"><i class="bi bi-check-lg"></i> Approve</button>
+                  </form>
+                  <form method="post" action="/admin/prompts/reject" style="display:inline;">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="prompt_id" value="<?= (int)$p['id'] ?>">
+                    <button class="adm-btn adm-btn-reject"><i class="bi bi-x-lg"></i> Reject</button>
                   </form>
                 </div>
               </td>
             </tr>
           <?php endforeach; ?>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
-  <?php endif; ?>
-</div>
-<?php endforeach; ?>
+    <?php endif; ?>
 
-<!-- Users -->
-<div class="tab-panel" id="tab-users">
-  <div class="table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($users as $u): ?>
-          <tr>
-            <td style="color:var(--muted);font-size:0.8rem;"><?= (int)$u['id'] ?></td>
-            <td>
-              <div style="display:flex;align-items:center;gap:0.375rem;">
-                <span class="avatar avatar-xs"><?= strtoupper(substr($u['name'] ?? 'U', 0, 2)) ?></span>
-                <span style="font-weight:600;font-size:0.875rem;"><?= e($u['name']) ?></span>
-              </div>
-            </td>
-            <td style="font-size:0.8rem;color:var(--muted);"><?= e($u['email']) ?></td>
-            <td>
-              <?php if ($u['role_name'] === 'super_admin'): ?>
-                <span class="badge badge-admin">Admin</span>
-              <?php else: ?>
-                <span class="badge badge-user">User</span>
-              <?php endif; ?>
-            </td>
-            <td style="font-size:0.8rem;color:var(--muted);">
-              <?= !empty($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-</div>
+  </div><!-- /adm-main -->
+</div><!-- /adm-wrap -->
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-document.querySelectorAll('#adminTabs .tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#adminTabs .tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('#adminTabs ~ .tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.target).classList.add('active');
+(function(){
+  const data = <?= $trendJson ?>;
+  const labels = data.map(d => d.day);
+  const isDark = document.documentElement.classList.contains('dark')
+    || window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  const textColor = isDark ? '#9CA3AF' : '#6B7280';
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Views',
+          data: data.map(d => d.views),
+          borderColor: '#7C3AED',
+          backgroundColor: 'rgba(124,58,237,.08)',
+          tension: .4, fill: true, pointRadius: 3, borderWidth: 2,
+        },
+        {
+          label: 'Likes',
+          data: data.map(d => d.likes),
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239,68,68,.06)',
+          tension: .4, fill: true, pointRadius: 3, borderWidth: 2,
+        },
+        {
+          label: 'Signups',
+          data: data.map(d => d.signups),
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16,185,129,.06)',
+          tension: .4, fill: true, pointRadius: 3, borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#1F2937' : '#fff',
+          borderColor: isDark ? '#374151' : '#E5E7EB',
+          borderWidth: 1,
+          titleColor: isDark ? '#F9FAFB' : '#111827',
+          bodyColor: textColor,
+          padding: 10,
+        },
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } }, beginAtZero: true },
+      },
+    },
   });
-});
+})();
 </script>

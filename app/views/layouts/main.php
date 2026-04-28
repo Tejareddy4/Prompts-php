@@ -19,10 +19,14 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/assets/css/app.css" rel="stylesheet">
+  <?php if (str_starts_with($currentPath, '/admin')): ?>
+  <link href="/assets/css/admin.css" rel="stylesheet">
+  <?php endif; ?>
 </head>
 <body>
 
 <!-- ── Top navbar ─────────────────────────────────────────────── -->
+<?php if (!str_starts_with($currentPath, '/admin')): ?>
 <nav class="site-nav">
   <div class="container">
     <a class="brand" href="/">
@@ -80,8 +84,20 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
     </div>
   </div>
 </nav>
+<?php endif; ?>
 
 <!-- ── Page content ───────────────────────────────────────────── -->
+<?php if (str_starts_with($currentPath, '/admin')): ?>
+<main style="min-height:100vh;">
+  <?php $flash = flash_get(); if ($flash): ?>
+    <?php $icons = ['success'=>'check-circle-fill','error'=>'x-circle-fill','warning'=>'exclamation-triangle-fill','info'=>'info-circle-fill']; $icon = $icons[$flash['type']] ?? 'info-circle-fill'; ?>
+    <div class="flash flash-<?= e($flash['type']) ?>" style="margin:1rem 1.5rem 0;">
+      <i class="bi bi-<?= $icon ?>"></i> <?= e($flash['message']) ?>
+    </div>
+  <?php endif; ?>
+  <?php require $viewPath; ?>
+</main>
+<?php else: ?>
 <main class="site-main">
   <div class="container">
     <?php $flash = flash_get(); if ($flash): ?>
@@ -97,8 +113,10 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
     <?php require $viewPath; ?>
   </div>
 </main>
+<?php endif; ?>
 
 <!-- ── Footer (desktop only) ─────────────────────────────────── -->
+<?php if (!str_starts_with($currentPath, '/admin')): ?>
 <footer class="site-footer">
   <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
     <span>&copy; <?= date('Y') ?> <strong style="color:rgba(255,255,255,.7)">PromptShare</strong> &mdash; Discover &amp; share AI prompts</span>
@@ -162,6 +180,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
     </a>
   <?php endif; ?>
 </nav>
+<?php endif; ?>
 
 <script>window.CSRF_TOKEN = '<?= e(App\Core\Csrf::token()) ?>';</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
