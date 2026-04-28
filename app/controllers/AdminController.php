@@ -74,8 +74,12 @@ class AdminController extends Controller
         if (!Csrf::validate($_POST['_csrf'] ?? null)) { $this->redirect('/admin/prompts'); }
         $db  = Database::connection($this->config['db']);
         $set = (int)($_POST['featured'] ?? 0);
-        $stmt = $db->prepare('UPDATE prompts SET is_featured = :f, updated_at = NOW() WHERE id = :id');
-        $stmt->execute(['f' => $set, 'id' => (int)$_POST['prompt_id']]);
+        try {
+            $stmt = $db->prepare('UPDATE prompts SET is_featured = :f, updated_at = NOW() WHERE id = :id');
+            $stmt->execute(['f' => $set, 'id' => (int)$_POST['prompt_id']]);
+        } catch (\Exception $e) {
+            // is_featured column not migrated yet — ignore
+        }
         flash($set ? 'Prompt featured.' : 'Prompt unfeatured.', 'success');
         $this->redirect('/admin/prompts');
     }

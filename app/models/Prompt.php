@@ -17,7 +17,8 @@ class Prompt extends Model
 
     public function paginateApproved(int $limit, int $offset, ?int $userId = null, array $filters = []): array
     {
-        $sql = 'SELECT p.*, u.name AS author, u.username AS author_username,
+        $sql = 'SELECT p.*, u.name AS author,
+                    COALESCE(u.username, \'\') AS author_username,
                     (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
                     (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count,
                     (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,
@@ -30,9 +31,8 @@ class Prompt extends Model
 
         $params = [];
         if (!empty($filters['q'])) {
-            // Use FULLTEXT if index exists, fall back to LIKE otherwise
-            $sql .= ' AND MATCH(p.title, p.description, p.prompt_text) AGAINST (:search IN BOOLEAN MODE)';
-            $params['search'] = $this->fulltextQuery($filters['q']);
+            $sql .= ' AND (p.title LIKE :search OR p.description LIKE :search OR p.prompt_text LIKE :search)';
+            $params['search'] = '%' . $filters['q'] . '%';
         }
 
         $sortBy = $filters['sort'] ?? 'newest';
@@ -40,7 +40,6 @@ class Prompt extends Model
             'most_liked'  => 'likes_count DESC, p.created_at DESC',
             'most_saved'  => 'saves_count DESC, p.created_at DESC',
             'most_viewed' => 'views_count DESC, p.created_at DESC',
-            'trending'    => 'p.trending_score DESC, p.created_at DESC',
             default       => 'p.created_at DESC',
         };
 
@@ -61,7 +60,8 @@ class Prompt extends Model
 
     public function findBySlug(string $slug, ?int $userId = null): ?array
     {
-        $sql = 'SELECT p.*, u.name AS author, u.username AS author_username,
+        $sql = 'SELECT p.*, u.name AS author,
+            COALESCE(u.username, \'\') AS author_username,
             (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
             (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count,
             (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,

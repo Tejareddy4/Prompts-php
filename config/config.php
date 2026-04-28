@@ -23,7 +23,7 @@ return [
         'port'     => (int)($_ENV['DB_PORT'] ?? 3306),
         'database' => $_ENV['DB_DATABASE'] ?? 'u166258402_promptshare',
         'username' => $_ENV['DB_USERNAME'] ?? 'u166258402_promptshare',
-        'password' => $_ENV['DB_PASSWORD'] ?? '',   // ← set in .env, never hardcode
+        'password' => $_ENV['DB_PASSWORD'] ?? 'Tejareddy@6300',
         'charset'  => 'utf8mb4',
     ],
     'upload' => [

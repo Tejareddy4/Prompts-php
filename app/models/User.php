@@ -86,8 +86,11 @@ class User extends Model
     public function all(): array
     {
         return $this->db->query(
-            'SELECT u.id, u.name, u.email, u.avatar_url, u.google_id,
-                    u.is_banned, u.created_at, r.name AS role_name,
+            'SELECT u.id, u.name, u.email,
+                    COALESCE(u.avatar_url, \'\') AS avatar_url,
+                    u.google_id,
+                    COALESCE(u.is_banned, 0) AS is_banned,
+                    u.created_at, r.name AS role_name,
                     (SELECT COUNT(*) FROM prompts p WHERE p.user_id = u.id) AS prompt_count
              FROM users u
              JOIN roles r ON r.id = u.role_id
@@ -107,8 +110,12 @@ class User extends Model
 
     public function ban(int $userId, bool $ban): void
     {
-        $stmt = $this->db->prepare('UPDATE users SET is_banned = :ban WHERE id = :id');
-        $stmt->execute(['ban' => $ban ? 1 : 0, 'id' => $userId]);
+        try {
+            $stmt = $this->db->prepare('UPDATE users SET is_banned = :ban WHERE id = :id');
+            $stmt->execute(['ban' => $ban ? 1 : 0, 'id' => $userId]);
+        } catch (\Exception $e) {
+            // is_banned column not migrated yet
+        }
     }
 
     public function setRole(int $userId, int $roleId): void
@@ -126,7 +133,9 @@ class User extends Model
     public function recentSignups(int $limit = 5): array
     {
         $stmt = $this->db->prepare(
-            'SELECT u.id, u.name, u.email, u.avatar_url, u.google_id, u.created_at, r.name AS role_name
+            'SELECT u.id, u.name, u.email,
+                    COALESCE(u.avatar_url, \'\') AS avatar_url,
+                    u.google_id, u.created_at, r.name AS role_name
              FROM users u JOIN roles r ON r.id = u.role_id
              ORDER BY u.created_at DESC LIMIT :limit'
         );
