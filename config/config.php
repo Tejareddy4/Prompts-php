@@ -32,7 +32,7 @@ return [
         'allowed_types' => ['image/jpeg', 'image/png', 'image/webp'],
     ],
     'cache' => [
-        'enabled' => filter_var($_ENV['CACHE_ENABLED'] ?? true, FILTER_VALIDATE_BOOLEAN),
+        'enabled' => filter_var($_ENV['CACHE_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
         'path'    => __DIR__ . '/../storage/cache',
         'ttl'     => (int)($_ENV['CACHE_TTL'] ?? 60),
     ],

@@ -98,8 +98,34 @@ class User extends Model
         )->fetchAll();
     }
 
-    public function stats(): array
+    public function findByUsername(string $username): ?array
     {
+        $stmt = $this->db->prepare(
+            'SELECT u.*, r.name AS role_name
+             FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE u.username = :username LIMIT 1'
+        );
+        $stmt->execute(['username' => $username]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function stats(?int $userId = null): array
+    {
+        if ($userId !== null) {
+            // Per-user stats
+            $stmt = $this->db->prepare(
+                'SELECT
+                    (SELECT COUNT(*) FROM prompts p WHERE p.user_id = :uid AND p.status_id = 2) AS prompt_count,
+                    (SELECT COUNT(*) FROM likes l JOIN prompts p ON p.id = l.prompt_id WHERE p.user_id = :uid) AS total_likes,
+                    (SELECT COUNT(*) FROM saves s JOIN prompts p ON p.id = s.prompt_id WHERE p.user_id = :uid) AS total_saves,
+                    (SELECT COUNT(*) FROM views v JOIN prompts p ON p.id = v.prompt_id WHERE p.user_id = :uid) AS total_views'
+            );
+            $stmt->execute(['uid' => $userId]);
+            return $stmt->fetch() ?: ['prompt_count' => 0, 'total_likes' => 0, 'total_saves' => 0, 'total_views' => 0];
+        }
+
+        // Platform-wide stats
         return [
             'total'        => (int) $this->db->query('SELECT COUNT(*) FROM users')->fetchColumn(),
             'today'        => (int) $this->db->query("SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()")->fetchColumn(),
