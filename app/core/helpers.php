@@ -68,6 +68,22 @@ function flash_get(): ?array
     return $flash;
 }
 
+/** All categories, queried once per request — for the footer nav and other chrome. */
+function all_categories(): array
+{
+    static $cats = null;
+    if ($cats !== null) {
+        return $cats;
+    }
+    try {
+        $db = \App\Core\Database::connection(config('db'));
+        $cats = (new \App\Models\Category($db))->all();
+    } catch (\Throwable $e) {
+        $cats = [];
+    }
+    return $cats;
+}
+
 /** Renders a small "cat-{color}" badge for a row carrying category_name/slug/icon/color. */
 function category_badge(array $item, string $size = 'sm'): string
 {

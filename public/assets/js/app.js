@@ -6,6 +6,33 @@ async function postData(url, data) {
   return res.json();
 }
 
+// One-click copy directly from a prompt card (no navigation)
+document.addEventListener('click', async (e) => {
+  const copyBtn = e.target.closest('.js-card-copy');
+  if (!copyBtn) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const text = copyBtn.dataset.copy || '';
+  try {
+    if (navigator.clipboard) await navigator.clipboard.writeText(text);
+    else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+  } catch (_) {}
+
+  const orig = copyBtn.innerHTML;
+  copyBtn.classList.add('is-copied');
+  copyBtn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+  setTimeout(() => { copyBtn.classList.remove('is-copied'); copyBtn.innerHTML = orig; }, 1800);
+
+  const id = copyBtn.dataset.id;
+  if (id) { try { await postData('/prompts/copy', { prompt_id: id }); } catch (_) {} }
+});
+
 // Like / Save / Copy — delegated from data-prompt-id wrapper
 document.addEventListener('click', async (e) => {
   const wrapper = e.target.closest('[data-prompt-id]');
@@ -91,6 +118,7 @@ if (lmBtn) {
             <span><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> ${item.saves_count ?? 0}</span>
             <span style="margin-left:auto;"><i class="bi bi-eye-fill"></i> ${item.views_count ?? 0}</span>
           </div>
+          ${item.prompt_text ? `<button type="button" class="pcard-copy js-card-copy" data-id="${item.id}" data-copy="${esc(item.prompt_text)}"><i class="bi bi-clipboard"></i> Copy prompt</button>` : ''}
         </div>`;
       grid.appendChild(a);
     });

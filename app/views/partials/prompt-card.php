@@ -29,5 +29,12 @@
       <span title="Saves"><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= (int)($item['saves_count'] ?? 0) ?></span>
       <span title="Views" style="margin-left:auto;"><i class="bi bi-eye-fill"></i> <?= (int)($item['views_count'] ?? 0) ?></span>
     </div>
+    <?php if (!empty($item['prompt_text'])): ?>
+      <button type="button" class="pcard-copy js-card-copy"
+              data-id="<?= (int)$item['id'] ?>"
+              data-copy="<?= e($item['prompt_text']) ?>">
+        <i class="bi bi-clipboard"></i> Copy prompt
+      </button>
+    <?php endif; ?>
   </div>
 </a>

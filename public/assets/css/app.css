@@ -599,6 +599,28 @@ main.site-main {
   gap: 0.25rem;
 }
 
+/* One-click copy button on card */
+.pcard-copy {
+  margin-top: 0.5rem;
+  width: 100%;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--p-l);
+  background: var(--p-xl);
+  color: var(--p);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pcard-copy:hover { background: var(--p-l); border-color: var(--p); }
+.pcard-copy.is-copied { background: #ECFDF5; border-color: #A7F3D0; color: #059669; }
+
 /* Desktop: flip to vertical card */
 @media (min-width: 640px) {
   .pcard { flex-direction: column; }
