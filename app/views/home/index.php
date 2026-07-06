@@ -45,7 +45,7 @@ unset($sortFilters['cat']);
     <a href="/category/<?= e($cat['slug']) ?>" class="cat-card cat-<?= e($cat['color']) ?>">
       <span class="cat-card-icon"><i class="bi <?= e($cat['icon']) ?>"></i></span>
       <span class="cat-card-name"><?= e($cat['name']) ?></span>
-      <span class="cat-card-count"><?= (int)$cat['prompt_count'] ?> prompts</span>
+      <span class="cat-card-count"><?= (int)$cat['prompt_count'] ?> prompt<?= (int)$cat['prompt_count'] === 1 ? '' : 's' ?></span>
     </a>
   <?php endforeach; ?>
 </div>
@@ -110,7 +110,7 @@ unset($sortFilters['cat']);
     <h4>No prompts found</h4>
     <p><?= $q ? 'Try different keywords or ' : '' ?><a href="<?= e($listAction) ?>">clear filters</a></p>
   </div>
-<?php else: ?>
+<?php elseif (count($prompts) === 12): ?>
   <div class="load-more-wrap">
     <button id="load-more" class="btn-load-more" data-page="2" data-cat="<?= e($activeCategory['slug'] ?? '') ?>">
       <i class="bi bi-arrow-down-circle"></i> Load more
