@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /prompts/create
+Disallow: /prompts/*/edit
+Disallow: /auth/
+
+Sitemap: https://prompt.xpanda.in/sitemap.xml

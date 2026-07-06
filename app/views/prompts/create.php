@@ -20,6 +20,17 @@
     </div>
 
     <div class="field">
+      <label for="category_id">Category <span class="req">*</span></label>
+      <select class="select" id="category_id" name="category_id" required>
+        <option value="" disabled selected>Choose a category…</option>
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?= (int)$cat['id'] ?>"><?= e($cat['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <div class="hint">Helps people find your prompt when browsing.</div>
+    </div>
+
+    <div class="field">
       <label for="description">Short description</label>
       <textarea class="textarea" id="description" name="description" rows="2"
                 placeholder="What does this prompt do? Who is it for?" maxlength="500"></textarea>

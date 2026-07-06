@@ -21,9 +21,9 @@ return [
     'db' => [
         'host'     => $_ENV['DB_HOST']     ?? '127.0.0.1',
         'port'     => (int)($_ENV['DB_PORT'] ?? 3306),
-        'database' => $_ENV['DB_DATABASE'] ?? 'u166258402_promptshare',
-        'username' => $_ENV['DB_USERNAME'] ?? 'u166258402_promptshare',
-        'password' => $_ENV['DB_PASSWORD'] ?? 'Tejareddy@6300',
+        'database' => $_ENV['DB_DATABASE'] ?? '',
+        'username' => $_ENV['DB_USERNAME'] ?? '',
+        'password' => $_ENV['DB_PASSWORD'] ?? '',
         'charset'  => 'utf8mb4',
     ],
     'upload' => [

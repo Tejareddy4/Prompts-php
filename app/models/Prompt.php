@@ -8,9 +8,11 @@ use App\Core\Model;
 
 class Prompt extends Model
 {
+    private const CATEGORY_FIELDS = 'c.name AS category_name, c.slug AS category_slug, c.icon AS category_icon, c.color AS category_color';
+
     public function create(array $data): int
     {
-        $stmt = $this->db->prepare('INSERT INTO prompts (user_id, title, slug, description, prompt_text, image_path, status_id, created_at, updated_at) VALUES (:user_id, :title, :slug, :description, :prompt_text, :image_path, 1, NOW(), NOW())');
+        $stmt = $this->db->prepare('INSERT INTO prompts (user_id, category_id, title, slug, description, prompt_text, image_path, status_id, created_at, updated_at) VALUES (:user_id, :category_id, :title, :slug, :description, :prompt_text, :image_path, 1, NOW(), NOW())');
         $stmt->execute($data);
         return (int) $this->db->lastInsertId();
     }
@@ -19,6 +21,7 @@ class Prompt extends Model
     {
         $sql = 'SELECT p.*, u.name AS author,
                     COALESCE(u.username, \'\') AS author_username,
+                    ' . self::CATEGORY_FIELDS . ',
                     (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
                     (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count,
                     (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,
@@ -27,12 +30,16 @@ class Prompt extends Model
             $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :user_id) AS is_liked,
                      EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :user_id) AS is_saved';
         }
-        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id WHERE p.status_id = 2';
+        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.status_id = 2';
 
         $params = [];
         if (!empty($filters['q'])) {
             $sql .= ' AND (p.title LIKE :search OR p.description LIKE :search OR p.prompt_text LIKE :search)';
             $params['search'] = '%' . $filters['q'] . '%';
+        }
+        if (!empty($filters['cat'])) {
+            $sql .= ' AND c.slug = :cat';
+            $params['cat'] = $filters['cat'];
         }
 
         $sortBy = $filters['sort'] ?? 'newest';
@@ -40,6 +47,7 @@ class Prompt extends Model
             'most_liked'  => 'likes_count DESC, p.created_at DESC',
             'most_saved'  => 'saves_count DESC, p.created_at DESC',
             'most_viewed' => 'views_count DESC, p.created_at DESC',
+            'trending'    => 'p.trending_score DESC, p.created_at DESC',
             default       => 'p.created_at DESC',
         };
 
@@ -62,6 +70,7 @@ class Prompt extends Model
     {
         $sql = 'SELECT p.*, u.name AS author,
             COALESCE(u.username, \'\') AS author_username,
+            ' . self::CATEGORY_FIELDS . ',
             (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
             (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count,
             (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,
@@ -70,7 +79,7 @@ class Prompt extends Model
             $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :user_id) AS is_liked,
                      EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :user_id) AS is_saved';
         }
-        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id WHERE p.slug = :slug AND p.status_id = 2 LIMIT 1';
+        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.slug = :slug AND p.status_id = 2 LIMIT 1';
         $stmt = $this->db->prepare($sql);
         if ($userId) {
             $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
@@ -108,9 +117,10 @@ class Prompt extends Model
 
     public function update(int $promptId, array $data): void
     {
-        $stmt = $this->db->prepare('UPDATE prompts SET title = :title, description = :description, prompt_text = :prompt_text, image_path = :image_path, status_id = 1, updated_at = NOW() WHERE id = :id');
+        $stmt = $this->db->prepare('UPDATE prompts SET title = :title, category_id = :category_id, description = :description, prompt_text = :prompt_text, image_path = :image_path, status_id = 1, updated_at = NOW() WHERE id = :id');
         $stmt->execute([
             'title' => $data['title'],
+            'category_id' => $data['category_id'],
             'description' => $data['description'],
             'prompt_text' => $data['prompt_text'],
             'image_path' => $data['image_path'],
@@ -118,9 +128,26 @@ class Prompt extends Model
         ]);
     }
 
+    /** Other approved prompts in the same category, for the "related" rail on the detail page. */
+    public function relatedByCategory(int $categoryId, int $excludeId, int $limit = 3): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT p.title, p.slug, ' . self::CATEGORY_FIELDS . '
+             FROM prompts p LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.category_id = :category_id AND p.id != :exclude_id AND p.status_id = 2
+             ORDER BY p.trending_score DESC, p.created_at DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':category_id', $categoryId, \PDO::PARAM_INT);
+        $stmt->bindValue(':exclude_id', $excludeId, \PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function userPrompts(int $userId): array
     {
-        $stmt = $this->db->prepare('SELECT p.*, (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count, (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count, (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count, (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count FROM prompts p WHERE p.user_id = :user_id ORDER BY p.created_at DESC');
+        $stmt = $this->db->prepare('SELECT p.*, ' . self::CATEGORY_FIELDS . ', (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count, (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count, (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count, (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count FROM prompts p LEFT JOIN categories c ON c.id = p.category_id WHERE p.user_id = :user_id ORDER BY p.created_at DESC');
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll();
     }
@@ -137,6 +164,14 @@ class Prompt extends Model
         $stmt = $this->db->prepare('SELECT p.* FROM prompts p JOIN likes l ON l.prompt_id = p.id WHERE l.user_id = :user_id ORDER BY l.created_at DESC');
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll();
+    }
+
+    /** Slug + timestamps for every live prompt, for sitemap generation. */
+    public function sitemapEntries(): array
+    {
+        return $this->db->query(
+            'SELECT slug, created_at, updated_at FROM prompts WHERE status_id = 2 ORDER BY updated_at DESC'
+        )->fetchAll();
     }
 
     public function analytics(): array

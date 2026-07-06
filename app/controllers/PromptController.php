@@ -8,6 +8,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Models\Category;
 use App\Models\Interaction;
 use App\Models\Prompt;
 use App\Services\PromptService;
@@ -19,6 +20,7 @@ class PromptController extends Controller
         $db          = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
         $interaction = new Interaction($db);
+        $categoryModel = new Category($db);
 
         $prompt = $promptModel->findBySlug($params['slug'], Auth::id());
         if (!$prompt) {
@@ -29,16 +31,28 @@ class PromptController extends Controller
 
         $interaction->addView((int)$prompt['id'], hash('sha256', session_id()), Auth::id());
 
+        $related = !empty($prompt['category_id'])
+            ? $promptModel->relatedByCategory((int)$prompt['category_id'], (int)$prompt['id'])
+            : [];
+
+        $description = $prompt['description'] !== '' ? $prompt['description'] : $prompt['prompt_text'];
+
         $this->render('prompts/show', [
             'prompt'          => $prompt,
+            'related'         => $related,
             'pageTitle'       => $prompt['title'],
-            'metaDescription' => substr($prompt['description'], 0, 155),
+            'metaDescription' => substr($description, 0, 155),
+            'canonical'       => rtrim(config('app.base_url'), '/') . '/prompt/' . $prompt['slug'],
         ]);
     }
 
     public function createForm(): void
     {
-        $this->render('prompts/create', ['pageTitle' => 'Submit a Prompt']);
+        $db = Database::connection($this->config['db']);
+        $this->render('prompts/create', [
+            'pageTitle'  => 'Submit a Prompt',
+            'categories' => (new Category($db))->all(),
+        ]);
     }
 
     public function store(): void
@@ -71,7 +85,11 @@ class PromptController extends Controller
             $this->redirect('/dashboard');
         }
 
-        $this->render('prompts/edit', ['prompt' => $prompt, 'pageTitle' => 'Edit Prompt']);
+        $this->render('prompts/edit', [
+            'prompt'     => $prompt,
+            'pageTitle'  => 'Edit Prompt',
+            'categories' => (new Category($db))->all(),
+        ]);
     }
 
     public function update(array $params): void
@@ -129,6 +147,7 @@ class PromptController extends Controller
         return new PromptService(
             new Prompt($db),
             new Interaction($db),
+            new Category($db),
             $this->config['upload'],
         );
     }

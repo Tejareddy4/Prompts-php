@@ -7,10 +7,13 @@ use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Controllers\PromptController;
+use App\Controllers\SeoController;
 
 // ── Public routes ──────────────────────────────────────────────
 $router->get('/', [HomeController::class, 'index']);
+$router->get('/category/{slug}', [HomeController::class, 'category']);
 $router->get('/prompts/load', [HomeController::class, 'loadMore']);
+$router->get('/sitemap.xml', [SeoController::class, 'sitemap']);
 
 // ── Auth ───────────────────────────────────────────────────────
 $router->get('/register',             [AuthController::class, 'showRegister']);

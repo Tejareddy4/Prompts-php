@@ -1,7 +1,16 @@
-<a href="/" class="show-back"><i class="bi bi-arrow-left"></i> Explore</a>
+<nav class="show-back" aria-label="Breadcrumb">
+  <a href="/"><i class="bi bi-arrow-left"></i> Explore</a>
+  <?php if (!empty($prompt['category_slug'])): ?>
+    <span style="opacity:.4;">/</span>
+    <a href="/category/<?= e($prompt['category_slug']) ?>"><?= e($prompt['category_name']) ?></a>
+  <?php endif; ?>
+</nav>
 
 <!-- Header -->
 <div class="show-header">
+  <?php if (!empty($prompt['category_slug'])): ?>
+    <?= category_badge($prompt, 'lg') ?>
+  <?php endif; ?>
   <h1><?= e($prompt['title']) ?></h1>
   <div class="show-author">
     <span class="avatar avatar-xs"><?= strtoupper(substr($prompt['author'] ?? 'U', 0, 2)) ?></span>
@@ -89,12 +98,42 @@
 
 </div>
 
+<?php if (!empty($related)): ?>
+  <div style="margin-top:1.5rem;">
+    <div class="section-hd">
+      <h2><i class="bi bi-collection" style="color:var(--p);"></i> Related Prompts</h2>
+    </div>
+    <div class="related-grid">
+      <?php foreach ($related as $r): ?>
+        <a href="/prompt/<?= e($r['slug']) ?>" class="related-card">
+          <?= category_badge($r) ?>
+          <span class="related-card-title"><?= e($r['title']) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
 <style>
 @media (min-width: 768px) {
   .show-sidebar { display: block !important; }
   div:has(> .show-sidebar) { flex-direction: row !important; align-items: flex-start; }
 }
 </style>
+
+<script type="application/ld+json">
+<?= json_encode([
+  '@context' => 'https://schema.org',
+  '@type' => 'CreativeWork',
+  'name' => $prompt['title'],
+  'description' => substr($prompt['description'] !== '' ? $prompt['description'] : $prompt['prompt_text'], 0, 300),
+  'dateCreated' => date('c', strtotime($prompt['created_at'])),
+  'dateModified' => date('c', strtotime($prompt['updated_at'])),
+  'author' => ['@type' => 'Person', 'name' => $prompt['author']],
+  'keywords' => $prompt['category_name'] ?? null,
+  'url' => $canonical ?? null,
+], JSON_UNESCAPED_SLASHES) ?>
+</script>
 
 <script>
 function copyPrompt(btn) {

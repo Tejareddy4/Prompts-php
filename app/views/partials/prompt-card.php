@@ -5,6 +5,9 @@
     <?php else: ?>
       <i class="bi bi-stars"></i>
     <?php endif; ?>
+    <?php if (!empty($item['category_slug'])): ?>
+      <span class="pcard-cat cat-<?= e($item['category_color']) ?>"><i class="bi <?= e($item['category_icon']) ?>"></i> <?= e($item['category_name']) ?></span>
+    <?php endif; ?>
   </div>
   <div class="pcard-body">
     <div class="pcard-title"><?= e($item['title']) ?></div>

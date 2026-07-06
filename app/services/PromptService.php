@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Interaction;
 use App\Models\Prompt;
 use PDO;
@@ -13,6 +14,7 @@ class PromptService
     public function __construct(
         private readonly Prompt      $promptModel,
         private readonly Interaction $interaction,
+        private readonly Category    $categoryModel,
         private readonly array       $uploadConfig,
     ) {}
 
@@ -29,11 +31,17 @@ class PromptService
             return ['ok' => false, 'error' => 'Prompt text is required.'];
         }
 
+        $categoryId = $this->resolveCategoryId($postData['category_id'] ?? null);
+        if ($categoryId === null) {
+            return ['ok' => false, 'error' => 'Please choose a category for your prompt.'];
+        }
+
         $slug      = $this->makeSlug($title);
         $imagePath = $this->handleUpload($file);
 
         $id = $this->promptModel->create([
             'user_id'     => $userId,
+            'category_id' => $categoryId,
             'title'       => $title,
             'slug'        => $slug,
             'description' => $description,
@@ -57,6 +65,11 @@ class PromptService
             return ['ok' => false, 'error' => 'Title and prompt text are required.'];
         }
 
+        $categoryId = $this->resolveCategoryId($postData['category_id'] ?? null);
+        if ($categoryId === null) {
+            return ['ok' => false, 'error' => 'Please choose a category for your prompt.'];
+        }
+
         $imagePath = $prompt['image_path'];
         $newImage  = $this->handleUpload($file);
         if ($newImage !== null) {
@@ -65,12 +78,22 @@ class PromptService
 
         $this->promptModel->update($promptId, [
             'title'       => $title,
+            'category_id' => $categoryId,
             'description' => trim($postData['description'] ?? ''),
             'prompt_text' => $promptText,
             'image_path'  => $imagePath,
         ]);
 
         return ['ok' => true];
+    }
+
+    private function resolveCategoryId(mixed $raw): ?int
+    {
+        if (!is_numeric($raw)) {
+            return null;
+        }
+        $id = (int) $raw;
+        return $this->categoryModel->findById($id) ? $id : null;
     }
 
     public function recordInteractionAndRefreshScore(string $type, int $promptId, ?int $userId): array

@@ -64,6 +64,7 @@ if (lmBtn) {
     const page = Number(lmBtn.dataset.page);
     const params = new URLSearchParams(window.location.search);
     params.set('page', page);
+    if (lmBtn.dataset.cat) params.set('cat', lmBtn.dataset.cat);
     const res = await fetch(`/prompts/load?${params}`);
     const json = await res.json();
     const grid = document.getElementById('prompt-grid');
@@ -76,6 +77,7 @@ if (lmBtn) {
       a.innerHTML = `
         <div class="pcard-thumb">
           ${item.image_path ? `<img loading="lazy" src="${esc(item.image_path)}" alt="${esc(item.title)}">` : '<i class="bi bi-stars"></i>'}
+          ${item.category_slug ? `<span class="pcard-cat cat-${esc(item.category_color)}"><i class="bi ${esc(item.category_icon)}"></i> ${esc(item.category_name)}</span>` : ''}
         </div>
         <div class="pcard-body">
           <div class="pcard-title">${esc(item.title)}</div>

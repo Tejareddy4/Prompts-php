@@ -8,18 +8,39 @@ use App\Core\Auth;
 use App\Core\Cache;
 use App\Core\Controller;
 use App\Core\Database;
+use App\Models\Category;
 use App\Models\Prompt;
 
 class HomeController extends Controller
 {
     public function index(): void
     {
+        $this->list(null);
+    }
+
+    public function category(array $params): void
+    {
+        $db = Database::connection($this->config['db']);
+        $category = (new Category($db))->findBySlug((string) $params['slug']);
+
+        if (!$category) {
+            http_response_code(404);
+            $this->render('errors/404', ['pageTitle' => 'Category Not Found']);
+            return;
+        }
+
+        $this->list($category);
+    }
+
+    private function list(?array $category): void
+    {
         $db = Database::connection($this->config['db']);
         $promptModel = new Prompt($db);
+        $categoryModel = new Category($db);
         $cache = new Cache($this->config['cache']);
-        $filters = $this->filters();
+        $filters = $this->filters($category['slug'] ?? null);
 
-        $canUseCache = !Auth::id() && empty($filters['q']) && $filters['sort'] === 'newest';
+        $canUseCache = !Auth::id() && empty($filters['q']) && empty($filters['cat']) && $filters['sort'] === 'newest';
         if ($canUseCache) {
             $prompts = $cache->remember('home_page_1', fn() => $promptModel->paginateApproved(12, 0, null, $filters));
         } else {
@@ -28,10 +49,19 @@ class HomeController extends Controller
 
         $analytics = $promptModel->analytics();
 
+        $pageTitle = $category ? $category['name'] . ' Prompts' : 'Discover Prompts';
+        $metaDescription = $category
+            ? 'Browse free ' . $category['name'] . ' AI prompts for ChatGPT, Claude & Gemini. Copy and use instantly.'
+            : 'Discover and share high-performing AI prompts for ChatGPT, Claude, Gemini & more.';
+
         $this->render('home/index', [
             'prompts' => $prompts,
             'filters' => $filters,
-            'pageTitle' => 'Discover Prompts',
+            'categories' => $categoryModel->withCounts(),
+            'activeCategory' => $category,
+            'pageTitle' => $pageTitle,
+            'metaDescription' => $metaDescription,
+            'canonical' => rtrim(config('app.base_url'), '/') . ($category ? '/category/' . $category['slug'] : '/'),
             'totalCount' => $analytics['approved_prompts'],
             'totalLikes' => $analytics['total_likes'],
             'totalViews' => $analytics['total_views'],
@@ -51,14 +81,15 @@ class HomeController extends Controller
         $this->json(['data' => $rows, 'next_page' => $page + 1, 'has_more' => count($rows) === $limit]);
     }
 
-    private function filters(): array
+    private function filters(?string $forcedCategory = null): array
     {
         $sort = (string) ($_GET['sort'] ?? 'newest');
-        $allowedSorts = ['newest', 'most_liked', 'most_saved', 'most_viewed'];
+        $allowedSorts = ['newest', 'most_liked', 'most_saved', 'most_viewed', 'trending'];
 
         return [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'sort' => in_array($sort, $allowedSorts, true) ? $sort : 'newest',
+            'cat' => $forcedCategory ?? trim((string) ($_GET['cat'] ?? '')),
         ];
     }
 }

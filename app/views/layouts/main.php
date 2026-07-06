@@ -1,6 +1,17 @@
 <?php
 $user = auth_user();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+
+$privatePrefixes = ['/admin', '/dashboard', '/login', '/register', '/prompts/create', '/auth/'];
+$isPrivatePage = false;
+foreach ($privatePrefixes as $prefix) {
+    if (str_starts_with($currentPath, $prefix)) { $isPrivatePage = true; break; }
+}
+$isPrivatePage = $isPrivatePage || preg_match('#^/prompts/\d+/edit$#', $currentPath) === 1;
+
+$metaTitle = e($pageTitle ?? config('app.name')) . ' | ' . e(config('app.name'));
+$metaDesc = $metaDescription ?? 'Discover and share high-performing AI prompts for ChatGPT, Claude, Gemini & more.';
+$canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 ?>
 <!doctype html>
 <html lang="en">
@@ -8,11 +19,41 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#7C3AED">
-  <title><?= e($pageTitle ?? config('app.name')) ?> | <?= e(config('app.name')) ?></title>
-  <meta name="description" content="<?= e($metaDescription ?? 'Discover and share high-performing AI prompts for ChatGPT, Claude, Gemini & more.') ?>">
+  <title><?= $metaTitle ?></title>
+  <meta name="description" content="<?= e($metaDesc) ?>">
+  <meta name="robots" content="<?= $isPrivatePage ? 'noindex, nofollow' : 'index, follow' ?>">
+  <link rel="canonical" href="<?= e($canonicalUrl) ?>">
+
+  <meta property="og:site_name" content="<?= e(config('app.name')) ?>">
+  <meta property="og:type" content="<?= !empty($prompt) ? 'article' : 'website' ?>">
+  <meta property="og:title" content="<?= $metaTitle ?>">
+  <meta property="og:description" content="<?= e($metaDesc) ?>">
+  <meta property="og:url" content="<?= e($canonicalUrl) ?>">
   <?php if (!empty($prompt['image_path'])): ?>
-    <meta property="og:image" content="<?= e(config('app.base_url') . $prompt['image_path']) ?>">
+    <meta property="og:image" content="<?= e(rtrim(config('app.base_url'), '/') . $prompt['image_path']) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+  <?php else: ?>
+    <meta name="twitter:card" content="summary">
   <?php endif; ?>
+  <meta name="twitter:title" content="<?= $metaTitle ?>">
+  <meta name="twitter:description" content="<?= e($metaDesc) ?>">
+
+  <?php if (!$isPrivatePage && $currentPath === '/'): ?>
+  <script type="application/ld+json">
+  <?= json_encode([
+      '@context' => 'https://schema.org',
+      '@type' => 'WebSite',
+      'name' => config('app.name'),
+      'url' => rtrim(config('app.base_url'), '/') . '/',
+      'potentialAction' => [
+          '@type' => 'SearchAction',
+          'target' => rtrim(config('app.base_url'), '/') . '/?q={search_term_string}',
+          'query-input' => 'required name=search_term_string',
+      ],
+  ]) ?>
+  </script>
+  <?php endif; ?>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

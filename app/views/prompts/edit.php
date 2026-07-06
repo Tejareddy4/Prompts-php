@@ -19,6 +19,16 @@
     </div>
 
     <div class="field">
+      <label for="category_id">Category <span class="req">*</span></label>
+      <select class="select" id="category_id" name="category_id" required>
+        <option value="" disabled <?= empty($prompt['category_id']) ? 'selected' : '' ?>>Choose a category…</option>
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?= (int)$cat['id'] ?>" <?= (int)($prompt['category_id'] ?? 0) === (int)$cat['id'] ? 'selected' : '' ?>><?= e($cat['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div class="field">
       <label for="description">Short description</label>
       <textarea class="textarea" id="description" name="description" rows="2"
                 maxlength="500"><?= e($prompt['description']) ?></textarea>

@@ -67,3 +67,15 @@ function flash_get(): ?array
     }
     return $flash;
 }
+
+/** Renders a small "cat-{color}" badge for a row carrying category_name/slug/icon/color. */
+function category_badge(array $item, string $size = 'sm'): string
+{
+    if (empty($item['category_slug'])) {
+        return '';
+    }
+    $cls = $size === 'sm' ? 'cat-badge cat-badge-sm' : 'cat-badge';
+    return '<span class="' . $cls . ' cat-' . e($item['category_color']) . '">'
+         . '<i class="bi ' . e($item['category_icon']) . '"></i> ' . e($item['category_name'])
+         . '</span>';
+}
