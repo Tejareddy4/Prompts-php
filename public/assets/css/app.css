@@ -1423,6 +1423,81 @@ main.site-main {
   line-height: 1.4;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   FAQ
+══════════════════════════════════════════════════════════════ */
+.faq-section { margin-top: 2.5rem; }
+.faq-list { display: flex; flex-direction: column; gap: 0.625rem; }
+.faq-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.faq-item[open] { border-color: color-mix(in srgb, var(--p) 30%, var(--border)); }
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.125rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-chevron { color: var(--muted); font-size: 0.85rem; transition: transform .2s; flex-shrink: 0; }
+.faq-item[open] .faq-chevron { transform: rotate(180deg); }
+.faq-answer {
+  padding: 0 1.125rem 1.125rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RICH FOOTER
+══════════════════════════════════════════════════════════════ */
+.footer-rich {
+  background: #0F172A;
+  color: rgba(255,255,255,.55);
+  margin-top: 2.5rem;
+  padding: 2.5rem 0 1.25rem;
+}
+.footer-rich .container { display: block; }
+.footer-cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 640px) { .footer-cols { grid-template-columns: 1fr 1fr; gap: 1.5rem; } }
+.footer-brand-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.footer-brand-row .brand-icon { width: 26px; height: 26px; }
+.footer-brand-name {
+  font-family: inherit; font-weight: 800; font-size: 1rem; color: #fff;
+}
+.footer-tagline { font-size: 0.8125rem; line-height: 1.6; color: rgba(255,255,255,.45); max-width: 280px; }
+.footer-col h4 {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: rgba(255,255,255,.4); margin-bottom: 0.875rem;
+}
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+.footer-col a { color: rgba(255,255,255,.6); font-size: 0.8125rem; text-decoration: none; transition: color .15s; }
+.footer-col a:hover { color: #fff; }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+  font-size: 0.78rem; color: rgba(255,255,255,.4);
+}
+.footer-bottom a { color: rgba(255,255,255,.6); }
+.footer-bottom a:hover { color: #fff; }
+
 /* ── Overrides for Bootstrap components still used ───────────── */
 .container { width: 100%; padding-left: 1rem; padding-right: 1rem; margin: 0 auto; max-width: 1200px; }
 @media (min-width: 640px)  { .container { padding-left: 1.25rem; padding-right: 1.25rem; } }

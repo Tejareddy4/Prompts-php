@@ -51,6 +51,16 @@ unset($sortFilters['cat']);
 </div>
 <?php else: ?>
 <!-- Category header -->
+<script type="application/ld+json">
+<?= json_encode([
+  '@context' => 'https://schema.org',
+  '@type' => 'BreadcrumbList',
+  'itemListElement' => [
+    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => rtrim(config('app.base_url'), '/') . '/'],
+    ['@type' => 'ListItem', 'position' => 2, 'name' => $activeCategory['name'] . ' Prompts', 'item' => rtrim(config('app.base_url'), '/') . '/category/' . $activeCategory['slug']],
+  ],
+], JSON_UNESCAPED_SLASHES) ?>
+</script>
 <section class="cat-hero cat-<?= e($activeCategory['color']) ?>">
   <a href="/" class="cat-hero-back"><i class="bi bi-arrow-left"></i> All categories</a>
   <span class="cat-hero-icon"><i class="bi <?= e($activeCategory['icon']) ?>"></i></span>
@@ -116,4 +126,39 @@ unset($sortFilters['cat']);
       <i class="bi bi-arrow-down-circle"></i> Load more
     </button>
   </div>
+<?php endif; ?>
+
+<?php if (!$activeCategory && !$q):
+  $faqs = [
+    ['q' => 'What is PromptShare?', 'a' => 'PromptShare is a free library of high-performing AI prompts for ChatGPT, Claude, Gemini and other AI tools. Browse by category, copy any prompt in one click, and use it instantly.'],
+    ['q' => 'Are the prompts free to use?', 'a' => 'Yes. Every prompt on PromptShare is 100% free to copy and use. Just click "Copy prompt" on any card or prompt page and paste it into your favourite AI tool.'],
+    ['q' => 'How do I use a prompt?', 'a' => 'Find a prompt you like, hit the copy button, then paste it into ChatGPT, Claude or Gemini. If a prompt asks for an image or details, add yours after pasting for best results.'],
+    ['q' => 'Can I submit my own prompts?', 'a' => 'Absolutely. Create a free account, click Submit, choose a category and share your prompt. Once approved it appears in the public library for everyone to discover.'],
+    ['q' => 'Which AI models do these prompts work with?', 'a' => 'Most prompts are model-agnostic and work well with ChatGPT (GPT-4/5), Claude, Google Gemini, and similar large language models. Image prompts work with Gemini, Midjourney and other image generators.'],
+  ];
+?>
+<section class="faq-section">
+  <div class="section-hd">
+    <h2><i class="bi bi-patch-question" style="color:var(--p);"></i> Frequently Asked Questions</h2>
+  </div>
+  <div class="faq-list">
+    <?php foreach ($faqs as $i => $f): ?>
+      <details class="faq-item" <?= $i === 0 ? 'open' : '' ?>>
+        <summary><?= e($f['q']) ?><i class="bi bi-chevron-down faq-chevron"></i></summary>
+        <div class="faq-answer"><?= e($f['a']) ?></div>
+      </details>
+    <?php endforeach; ?>
+  </div>
+</section>
+<script type="application/ld+json">
+<?= json_encode([
+  '@context' => 'https://schema.org',
+  '@type' => 'FAQPage',
+  'mainEntity' => array_map(fn($f) => [
+    '@type' => 'Question',
+    'name' => $f['q'],
+    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
+  ], $faqs),
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>
+</script>
 <?php endif; ?>

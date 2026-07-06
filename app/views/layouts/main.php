@@ -156,14 +156,49 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 </main>
 <?php endif; ?>
 
-<!-- ── Footer (desktop only) ─────────────────────────────────── -->
-<?php if (!str_starts_with($currentPath, '/admin')): ?>
-<footer class="site-footer">
-  <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-    <span>&copy; <?= date('Y') ?> <strong style="color:rgba(255,255,255,.7)">PromptShare</strong> &mdash; Discover &amp; share AI prompts</span>
-    <div style="display:flex;gap:1.25rem;">
-      <a href="/">Explore</a>
-      <a href="/prompts/create">Submit</a>
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<?php if (!str_starts_with($currentPath, '/admin')):
+  $footerCats = all_categories();
+?>
+<footer class="footer-rich">
+  <div class="container">
+    <div class="footer-cols">
+      <div class="footer-col">
+        <div class="footer-brand-row">
+          <span class="brand-icon"><i class="bi bi-lightning-fill"></i></span>
+          <span class="footer-brand-name">PromptShare</span>
+        </div>
+        <p class="footer-tagline">A free, curated library of high-performing AI prompts for ChatGPT, Claude &amp; Gemini. Copy any prompt in one click.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <ul>
+          <?php foreach (array_slice($footerCats, 0, 6) as $fc): ?>
+            <li><a href="/category/<?= e($fc['slug']) ?>"><?= e($fc['name']) ?></a></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>PromptShare</h4>
+        <ul>
+          <li><a href="/">Explore prompts</a></li>
+          <li><a href="/prompts/create">Submit a prompt</a></li>
+          <?php if ($user): ?>
+            <li><a href="/dashboard">Dashboard</a></li>
+          <?php else: ?>
+            <li><a href="/register">Create account</a></li>
+            <li><a href="/login">Sign in</a></li>
+          <?php endif; ?>
+          <li><a href="/sitemap.xml">Sitemap</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; <?= date('Y') ?> PromptShare &mdash; Part of <a href="https://xpanda.in">Xpanda.in</a></span>
+      <span>Made for AI creators</span>
     </div>
   </div>
 </footer>
