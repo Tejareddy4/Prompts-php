@@ -121,6 +121,18 @@
 }
 </style>
 
+<?php
+$base = rtrim(config('app.base_url'), '/');
+$crumbs = [['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => $base . '/']];
+if (!empty($prompt['category_slug'])) {
+    $crumbs[] = ['@type' => 'ListItem', 'position' => 2, 'name' => $prompt['category_name'] . ' Prompts', 'item' => $base . '/category/' . $prompt['category_slug']];
+}
+$crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => $prompt['title'], 'item' => $canonical ?? ($base . '/prompt/' . $prompt['slug'])];
+?>
+<script type="application/ld+json">
+<?= json_encode(['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $crumbs], JSON_UNESCAPED_SLASHES) ?>
+</script>
+
 <script type="application/ld+json">
 <?= json_encode([
   '@context' => 'https://schema.org',

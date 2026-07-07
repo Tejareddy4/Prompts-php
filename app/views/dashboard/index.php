@@ -86,6 +86,9 @@ $statusMap = [1 => 'pending', 2 => 'approved', 3 => 'rejected'];
             </div>
             <div class="dash-prompt-meta">
               <span class="badge badge-<?= $statusLabel ?>"><?= $statusLabel ?></span>
+              <?php if (!empty($p['category_slug'])): ?>
+                <?= category_badge($p) ?>
+              <?php endif; ?>
               <?php if ($statusLabel !== 'approved'): ?>
                 <a href="/prompts/<?= (int)$p['id'] ?>/edit" class="btn btn-sm btn-outline" style="height:24px;padding:0 0.5rem;font-size:0.72rem;">
                   <i class="bi bi-pencil"></i> Edit
