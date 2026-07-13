@@ -9,6 +9,7 @@ use App\Core\Cache;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Models\Category;
+use App\Models\Interaction;
 use App\Models\Prompt;
 
 class HomeController extends Controller
@@ -40,7 +41,8 @@ class HomeController extends Controller
         $cache = new Cache($this->config['cache']);
         $filters = $this->filters($category['slug'] ?? null);
 
-        $canUseCache = !Auth::id() && empty($filters['q']) && empty($filters['cat']) && $filters['sort'] === 'newest';
+        // Guests all get the same generic mix → cacheable. Logged-in feeds are personal.
+        $canUseCache = !Auth::id() && empty($filters['q']) && empty($filters['cat']) && $filters['sort'] === 'for_you';
         if ($canUseCache) {
             $prompts = $cache->remember('home_page_1', fn() => $promptModel->paginateApproved(12, 0, null, $filters));
         } else {
@@ -93,15 +95,36 @@ class HomeController extends Controller
         $this->json(['data' => $rows, 'next_page' => $page + 1, 'has_more' => count($rows) === $limit]);
     }
 
+    /** Typeahead: top title matches as JSON for the search box. */
+    public function suggest(): void
+    {
+        $q = trim((string) ($_GET['q'] ?? ''));
+        if (mb_strlen($q) < 2) {
+            $this->json(['data' => []]);
+            return;
+        }
+
+        $db = Database::connection($this->config['db']);
+        $this->json(['data' => (new Prompt($db))->suggestByTitle(mb_substr($q, 0, 80), 8)]);
+    }
+
     private function filters(?string $forcedCategory = null): array
     {
-        $sort = (string) ($_GET['sort'] ?? 'newest');
-        $allowedSorts = ['newest', 'most_liked', 'most_saved', 'most_viewed', 'trending'];
+        $sort = (string) ($_GET['sort'] ?? 'for_you');
+        $allowedSorts = ['for_you', 'newest', 'most_liked', 'most_saved', 'most_viewed', 'trending'];
 
-        return [
+        $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
-            'sort' => in_array($sort, $allowedSorts, true) ? $sort : 'newest',
+            'sort' => in_array($sort, $allowedSorts, true) ? $sort : 'for_you',
             'cat' => $forcedCategory ?? trim((string) ($_GET['cat'] ?? '')),
         ];
+
+        // Personalize "For You" with the viewer's most-visited categories.
+        if ($filters['sort'] === 'for_you' && Auth::id()) {
+            $db = Database::connection($this->config['db']);
+            $filters['top_cats'] = (new Interaction($db))->topCategories((int) Auth::id());
+        }
+
+        return $filters;
     }
 }

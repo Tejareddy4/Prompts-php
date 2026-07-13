@@ -1,3 +1,12 @@
+<?php
+$publicKarma  = $karma['public']  ?? ['score' => 0, 'level' => 'Newcomer', 'color' => 'gray', 'breakdown' => []];
+$privateKarma = $karma['private'] ?? null;
+$karmaTip = implode("\n", array_map(
+    fn($rule, $pts) => "{$rule}: " . ($pts >= 0 ? '+' : '') . $pts,
+    array_keys($publicKarma['breakdown']),
+    $publicKarma['breakdown']
+));
+?>
 <!-- Profile hero -->
 <div style="background:linear-gradient(135deg,#1E1B4B,#4C1D95);border-radius:var(--r-lg);padding:1.5rem 1.25rem;margin-bottom:1.25rem;color:#fff;">
   <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
@@ -5,8 +14,11 @@
       <?= strtoupper(substr($profile['name'] ?? 'U', 0, 2)) ?>
     </span>
     <div>
-      <h1 style="font-size:1.35rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.2rem;">
+      <h1 style="font-size:1.35rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.2rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
         <?= e($profile['name']) ?>
+        <span class="karma-badge karma-<?= e($publicKarma['color']) ?>" title="<?= e($karmaTip) ?>">
+          <i class="bi bi-award-fill"></i> <?= e($publicKarma['level']) ?>
+        </span>
       </h1>
       <div style="font-size:0.875rem;color:rgba(255,255,255,.65);">
         @<?= e($profile['username'] ?? '') ?>
@@ -34,7 +46,31 @@
       <div style="font-size:1.25rem;font-weight:800;line-height:1;"><?= (int)$stats['views_received'] ?></div>
       <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Views</div>
     </div>
+    <div title="<?= e($karmaTip) ?>">
+      <div style="font-size:1.25rem;font-weight:800;line-height:1;color:#FBBF24;"><?= (int)$publicKarma['score'] ?></div>
+      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Karma</div>
+    </div>
   </div>
+
+  <?php if (!empty($viewerIsAdmin) && $privateKarma): ?>
+  <!-- Trust score — rendered only for super_admin viewers -->
+  <div style="margin-top:1rem;padding:0.75rem 1rem;background:rgba(0,0,0,.25);border:1px dashed rgba(255,255,255,.25);border-radius:var(--r-sm);">
+    <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+      <i class="bi bi-shield-lock-fill" style="color:rgba(255,255,255,.55);"></i>
+      <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.55);">Admin only · Trust score</span>
+      <span class="karma-badge karma-<?= e($privateKarma['color']) ?>">
+        <?= (int)$privateKarma['score'] ?>/100 · <?= e($privateKarma['band']) ?>
+      </span>
+    </div>
+    <div style="margin-top:0.5rem;display:flex;gap:0.35rem;flex-wrap:wrap;">
+      <?php foreach ($privateKarma['breakdown'] as $rule => $pts): ?>
+        <span style="font-size:0.7rem;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);">
+          <?= e($rule) ?>: <strong style="color:<?= $pts >= 0 ? '#4ADE80' : '#F87171' ?>;"><?= $pts >= 0 ? '+' : '' ?><?= (int)$pts ?></strong>
+        </span>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
 </div>
 
 <!-- Prompts -->

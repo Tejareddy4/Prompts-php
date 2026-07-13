@@ -158,3 +158,71 @@ function esc(str) {
   d.textContent = str ?? '';
   return d.innerHTML;
 }
+
+// ── Search autocomplete: top prompts suggested while typing ─────────
+document.querySelectorAll('.hero-search input[name="q"]').forEach(input => {
+  const form = input.closest('form');
+  form.style.position = 'relative';
+  form.setAttribute('autocomplete', 'off');
+
+  const box = document.createElement('div');
+  box.className = 'search-suggest';
+  box.hidden = true;
+  form.appendChild(box);
+
+  let items = [], active = -1, debounce = null, lastQ = '';
+
+  const close = () => { box.hidden = true; box.innerHTML = ''; items = []; active = -1; };
+
+  const highlight = (title, q) => {
+    const i = title.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return esc(title);
+    return esc(title.slice(0, i)) + '<mark>' + esc(title.slice(i, i + q.length)) + '</mark>' + esc(title.slice(i + q.length));
+  };
+
+  const render = (data, q) => {
+    if (!data.length) { close(); return; }
+    box.innerHTML = data.map((s, i) => `
+      <a class="ss-item" data-i="${i}" href="${BASE}/prompt/${encodeURIComponent(s.slug)}">
+        <i class="bi bi-search ss-icon"></i>
+        <span class="ss-title">${highlight(s.title, q)}</span>
+        ${s.category_name ? `<span class="ss-cat cat-${esc(s.category_color)}"><i class="bi ${esc(s.category_icon)}"></i> ${esc(s.category_name)}</span>` : ''}
+        ${Number(s.likes_count) > 0 ? `<span class="ss-likes"><i class="bi bi-heart-fill"></i> ${Number(s.likes_count)}</span>` : ''}
+      </a>`).join('')
+      + `<button type="submit" class="ss-item ss-all"><i class="bi bi-arrow-return-left ss-icon"></i> Search all results for "<strong>${esc(q)}</strong>"</button>`;
+    items = [...box.querySelectorAll('.ss-item')];
+    active = -1;
+    box.hidden = false;
+  };
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearTimeout(debounce);
+    if (q.length < 2) { close(); return; }
+    debounce = setTimeout(async () => {
+      lastQ = q;
+      try {
+        const res = await fetch(`${BASE}/search/suggest?q=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        if (q === lastQ) render(json.data || [], q);
+      } catch (_) { close(); }
+    }, 220);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (box.hidden || !items.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items.forEach((el, i) => el.classList.toggle('active', i === active));
+      items[active].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && active >= 0 && !items[active].classList.contains('ss-all')) {
+      e.preventDefault();
+      window.location.href = items[active].href;
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+
+  document.addEventListener('click', (e) => { if (!form.contains(e.target)) close(); });
+});

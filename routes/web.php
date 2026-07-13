@@ -14,6 +14,7 @@ use App\Controllers\UserController;
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/category/{slug}', [HomeController::class, 'category']);
 $router->get('/prompts/load', [HomeController::class, 'loadMore']);
+$router->get('/search/suggest', [HomeController::class, 'suggest']);
 $router->get('/sitemap.xml', [SeoController::class, 'sitemap']);
 
 // ── Auth ───────────────────────────────────────────────────────

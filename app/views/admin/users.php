@@ -70,6 +70,8 @@ $growthCounts = array_column($growth, 'count');
             <th>Auth</th>
             <th>Role</th>
             <th>Prompts</th>
+            <th>Karma</th>
+            <th title="Private trust score — admin only">Trust</th>
             <th>Joined</th>
             <th>Status</th>
             <th>Actions</th>
@@ -110,6 +112,31 @@ $growthCounts = array_column($growth, 'count');
               </form>
             </td>
             <td class="adm-muted"><?= (int)($u['prompt_count'] ?? 0) ?></td>
+            <?php
+              $k = $karmaMap[(int)$u['id']] ?? null;
+              $fmtTip = fn(array $breakdown) => implode("\n", array_map(
+                  fn($rule, $pts) => "{$rule}: " . ($pts >= 0 ? '+' : '') . $pts,
+                  array_keys($breakdown), $breakdown
+              ));
+            ?>
+            <td>
+              <?php if ($k): ?>
+                <span class="karma-badge karma-<?= e($k['public']['color']) ?>" title="<?= e($k['public']['level'] . "\n" . $fmtTip($k['public']['breakdown'])) ?>">
+                  <i class="bi bi-award-fill"></i> <?= (int)$k['public']['score'] ?>
+                </span>
+              <?php else: ?>
+                <span class="adm-muted">—</span>
+              <?php endif; ?>
+            </td>
+            <td>
+              <?php if ($k): ?>
+                <span class="karma-badge karma-<?= e($k['private']['color']) ?>" title="<?= e($k['private']['band'] . "\n" . $fmtTip($k['private']['breakdown'])) ?>">
+                  <i class="bi bi-shield-lock-fill"></i> <?= (int)$k['private']['score'] ?>
+                </span>
+              <?php else: ?>
+                <span class="adm-muted">—</span>
+              <?php endif; ?>
+            </td>
             <td class="adm-muted" style="font-size:.75rem;"><?= date('M j, Y', strtotime($u['created_at'])) ?></td>
             <td>
               <?php if ($u['is_banned'] ?? 0): ?>

@@ -34,12 +34,13 @@ class Prompt extends Model
         $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.status_id = 2';
 
         $params = [];
-        if (!empty($filters['q'])) {
+        $searching = !empty($filters['q']);
+        if ($searching) {
             $sql .= ' AND (p.title LIKE :search_title OR p.description LIKE :search_desc OR p.prompt_text LIKE :search_text)';
-            $searchTerm = '%' . $filters['q'] . '%';
-            $params['search_title'] = $searchTerm;
-            $params['search_desc']  = $searchTerm;
-            $params['search_text']  = $searchTerm;
+            $like = '%' . $this->escapeLike($filters['q']) . '%';
+            $params['search_title'] = $like;
+            $params['search_desc']  = $like;
+            $params['search_text']  = $like;
         }
         if (!empty($filters['cat'])) {
             $sql .= ' AND c.slug = :cat';
@@ -48,12 +49,20 @@ class Prompt extends Model
 
         $sortBy = $filters['sort'] ?? 'newest';
         $orderBy = match ($sortBy) {
+            'for_you'     => $this->forYouOrderBy($filters['top_cats'] ?? [], $params),
             'most_liked'  => 'likes_count DESC, p.created_at DESC',
             'most_saved'  => 'saves_count DESC, p.created_at DESC',
             'most_viewed' => 'views_count DESC, p.created_at DESC',
             'trending'    => 'p.trending_score DESC, p.created_at DESC',
             default       => 'p.created_at DESC',
         };
+
+        // Title matches outrank description/body matches; prefix matches outrank both.
+        if ($searching) {
+            $params['rel_prefix'] = $this->escapeLike($filters['q']) . '%';
+            $params['rel_title']  = '%' . $this->escapeLike($filters['q']) . '%';
+            $orderBy = '(p.title LIKE :rel_prefix) DESC, (p.title LIKE :rel_title) DESC, ' . $orderBy;
+        }
 
         $sql .= " ORDER BY {$orderBy} LIMIT :limit OFFSET :offset";
 
@@ -67,6 +76,68 @@ class Prompt extends Model
         }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * "For You" feed score, referencing the likes/saves/copies/views aliases
+     * from the SELECT (MariaDB resolves aliases in ORDER BY):
+     *   - engagement, decaying with age:   (L*3 + S*4 + C*2 + V*0.15) / (days+2)^0.55
+     *   - freshness boost so new prompts surface: +5 (≤3 days), +2.5 (≤7 days)
+     *   - personal category affinity: up to +8 per prompt in the viewer's
+     *     most-visited categories (weight 0..1 from their view/like/save/copy history)
+     */
+    private function forYouOrderBy(array $topCats, array &$params): string
+    {
+        $score = '(likes_count * 3 + saves_count * 4 + copies_count * 2 + views_count * 0.15)
+                  / POW(GREATEST(DATEDIFF(NOW(), p.created_at), 0) + 2, 0.55)
+                  + CASE WHEN p.created_at >= DATE_SUB(NOW(), INTERVAL 3 DAY) THEN 5
+                         WHEN p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 2.5
+                         ELSE 0 END';
+
+        if ($topCats !== []) {
+            $cases = [];
+            $i = 0;
+            foreach ($topCats as $categoryId => $weight) {
+                $cases[] = "WHEN :aff_c{$i} THEN :aff_w{$i}";
+                $params["aff_c{$i}"] = (int) $categoryId;
+                $params["aff_w{$i}"] = round(8 * (float) $weight, 2);
+                $i++;
+            }
+            $score .= ' + CASE p.category_id ' . implode(' ', $cases) . ' ELSE 0 END';
+        }
+
+        return "({$score}) DESC, p.created_at DESC";
+    }
+
+    /** Escape LIKE wildcards in user input so they match literally. */
+    private function escapeLike(string $value): string
+    {
+        return addcslashes($value, '\\%_');
+    }
+
+    /**
+     * Typeahead suggestions: approved prompts whose title matches, ranked by
+     * match quality (prefix > word-start > anywhere), then popularity.
+     */
+    public function suggestByTitle(string $q, int $limit = 8): array
+    {
+        $safe = $this->escapeLike($q);
+        $stmt = $this->db->prepare(
+            'SELECT p.title, p.slug, ' . self::CATEGORY_FIELDS . ',
+                    (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
+                    ((p.title LIKE :m_prefix) * 4 + (p.title LIKE :m_word) * 2 + 1) AS match_rank
+             FROM prompts p
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.status_id = 2 AND p.title LIKE :m_any
+             ORDER BY match_rank DESC, p.trending_score DESC, likes_count DESC, p.created_at DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':m_prefix', $safe . '%');
+        $stmt->bindValue(':m_word', '% ' . $safe . '%');
+        $stmt->bindValue(':m_any', '%' . $safe . '%');
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }

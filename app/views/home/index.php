@@ -1,11 +1,11 @@
 <?php
 $q    = $filters['q'] ?? '';
-$sort = $filters['sort'] ?? 'newest';
-$sortLabels = ['newest'=>'Newest','trending'=>'Trending','most_liked'=>'Top Liked','most_saved'=>'Most Saved','most_viewed'=>'Most Viewed'];
-$sortIcons  = ['newest'=>'clock','trending'=>'fire','most_liked'=>'heart-fill','most_saved'=>'bookmark-fill','most_viewed'=>'eye-fill'];
+$sort = $filters['sort'] ?? 'for_you';
+$sortLabels = ['for_you'=>'For You','newest'=>'Newest','trending'=>'Trending','most_liked'=>'Top Liked','most_saved'=>'Most Saved','most_viewed'=>'Most Viewed'];
+$sortIcons  = ['for_you'=>'stars','newest'=>'clock','trending'=>'fire','most_liked'=>'heart-fill','most_saved'=>'bookmark-fill','most_viewed'=>'eye-fill'];
 $listAction = $activeCategory ? '/category/' . $activeCategory['slug'] : '/';
 $sortFilters = $filters;
-unset($sortFilters['cat']);
+unset($sortFilters['cat'], $sortFilters['top_cats']);
 ?>
 
 <?php if (!$activeCategory): ?>
@@ -35,6 +35,57 @@ unset($sortFilters['cat']);
     </div>
   </div>
 </section>
+
+<?php if (!empty($slider)): ?>
+<!-- Featured slider -->
+<section class="hslider" id="hslider" aria-label="Featured prompts">
+  <?php foreach ($slider as $i => $s): ?>
+    <a href="/prompt/<?= e($s['slug']) ?>" class="hslide<?= $i === 0 ? ' active' : '' ?>" <?= $i === 0 ? '' : 'tabindex="-1"' ?>>
+      <img src="<?= e($s['image_path']) ?>" alt="<?= e($s['title']) ?>"
+           <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
+      <div class="hslide-overlay">
+        <?php if (!empty($s['category_slug'])): ?>
+          <span class="cat-badge cat-<?= e($s['category_color']) ?>">
+            <i class="bi <?= e($s['category_icon']) ?>"></i> <?= e($s['category_name']) ?>
+          </span>
+        <?php endif; ?>
+        <h2 class="hslide-title"><?= e($s['title']) ?></h2>
+        <?php if (!empty($s['description'])): ?>
+          <p class="hslide-desc"><?= e(mb_strimwidth($s['description'], 0, 110, '…')) ?></p>
+        <?php endif; ?>
+        <div class="hslide-meta">
+          <span><i class="bi bi-heart-fill"></i> <?= (int)$s['likes_count'] ?></span>
+          <span><i class="bi bi-eye-fill"></i> <?= (int)$s['views_count'] ?></span>
+          <span class="hslide-cta">View prompt <i class="bi bi-arrow-right"></i></span>
+        </div>
+      </div>
+    </a>
+  <?php endforeach; ?>
+  <button type="button" class="hslider-arrow hslider-prev" aria-label="Previous slide"><i class="bi bi-chevron-left"></i></button>
+  <button type="button" class="hslider-arrow hslider-next" aria-label="Next slide"><i class="bi bi-chevron-right"></i></button>
+  <div class="hslider-dots">
+    <?php foreach ($slider as $i => $s): ?>
+      <button type="button" class="hslider-dot<?= $i === 0 ? ' active' : '' ?>" data-slide="<?= $i ?>"
+              aria-label="Go to slide <?= $i + 1 ?>"></button>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($topPicks)): ?>
+<!-- Top picks -->
+<div class="section-hd">
+  <h2><i class="bi bi-trophy-fill" style="color:#F59E0B;"></i> Top Picks</h2>
+</div>
+<div class="top-picks">
+  <?php foreach ($topPicks as $rank => $item): ?>
+    <div class="top-pick">
+      <span class="tp-rank tp-rank-<?= $rank + 1 ?>">#<?= $rank + 1 ?></span>
+      <?php require __DIR__ . '/../partials/prompt-card.php'; ?>
+    </div>
+  <?php endforeach; ?>
+</div>
+<?php endif; ?>
 
 <!-- Browse by category -->
 <div class="section-hd">
@@ -160,5 +211,46 @@ unset($sortFilters['cat']);
     'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
   ], $faqs),
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>
+</script>
+<?php endif; ?>
+
+<?php if (!empty($slider)): ?>
+<script>
+(() => {
+  const root = document.getElementById('hslider');
+  if (!root) return;
+  const slides = root.querySelectorAll('.hslide');
+  const dots = root.querySelectorAll('.hslider-dot');
+  let cur = 0, timer = null;
+
+  const show = (i) => {
+    slides[cur].classList.remove('active');
+    slides[cur].setAttribute('tabindex', '-1');
+    dots[cur].classList.remove('active');
+    cur = (i + slides.length) % slides.length;
+    slides[cur].classList.add('active');
+    slides[cur].removeAttribute('tabindex');
+    dots[cur].classList.add('active');
+  };
+  const play = () => { stop(); timer = setInterval(() => show(cur + 1), 5000); };
+  const stop = () => { if (timer) clearInterval(timer); timer = null; };
+
+  root.querySelector('.hslider-prev').addEventListener('click', () => { show(cur - 1); play(); });
+  root.querySelector('.hslider-next').addEventListener('click', () => { show(cur + 1); play(); });
+  dots.forEach(d => d.addEventListener('click', () => { show(+d.dataset.slide); play(); }));
+  root.addEventListener('mouseenter', stop);
+  root.addEventListener('mouseleave', play);
+
+  let x0 = null;
+  root.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  root.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) { show(cur + (dx < 0 ? 1 : -1)); play(); }
+    x0 = null;
+  }, { passive: true });
+
+  play();
+})();
 </script>
 <?php endif; ?>

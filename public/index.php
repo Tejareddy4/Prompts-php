@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 use App\Core\Router;
 
+// PHP built-in dev server (php -S … public/index.php): serve real files directly
+if (PHP_SAPI === 'cli-server') {
+    $devPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+    if ($devPath !== '/' && is_file(__DIR__ . $devPath)) {
+        return false;
+    }
+}
+
 // ── Load .env ────────────────────────────────────────────────
 $envFile = __DIR__ . '/../.env';
 if (is_readable($envFile)) {

@@ -9,6 +9,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Database;
 use App\Models\Category;
+use App\Models\Karma;
 use App\Models\Prompt;
 use App\Models\User;
 
@@ -114,6 +115,7 @@ class AdminController extends Controller
             'users'     => $userModel->all(),
             'userStats' => $userModel->stats(),
             'growth'    => $userModel->growthByDay(14),
+            'karmaMap'  => (new Karma($db))->forAllUsers(),
         ]);
     }
 

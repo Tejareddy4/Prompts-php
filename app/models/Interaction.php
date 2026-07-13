@@ -64,6 +64,46 @@ class Interaction extends Model
         return $this->count('views', $promptId);
     }
 
+    /**
+     * The user's most-visited categories, weighted by how strong each signal is
+     * (save 3 > like/copy 2 > view 1). Returns [category_id => weight 0..1],
+     * strongest first — the input for "For You" feed personalization.
+     */
+    public function topCategories(int $userId, int $limit = 3): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT p.category_id, SUM(i.w) AS weight
+             FROM (
+                 SELECT prompt_id, 1 AS w FROM views  WHERE user_id = :uid_v
+                 UNION ALL SELECT prompt_id, 2 FROM likes  WHERE user_id = :uid_l
+                 UNION ALL SELECT prompt_id, 3 FROM saves  WHERE user_id = :uid_s
+                 UNION ALL SELECT prompt_id, 2 FROM copies WHERE user_id = :uid_c
+             ) i
+             JOIN prompts p ON p.id = i.prompt_id
+             WHERE p.category_id IS NOT NULL
+             GROUP BY p.category_id
+             ORDER BY weight DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':uid_v', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue(':uid_l', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue(':uid_s', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue(':uid_c', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll();
+        if (!$rows) {
+            return [];
+        }
+        $max = (float) $rows[0]['weight'];
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row['category_id']] = round((float) $row['weight'] / $max, 3);
+        }
+        return $map;
+    }
+
     private function count(string $table, int $promptId): int
     {
         static $allowed = ['likes', 'saves', 'copies', 'views'];
