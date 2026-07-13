@@ -34,6 +34,16 @@ function e(string $value): string
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
+/** Prefix a root-relative app path with the base path (for subfolder installs). */
+function app_url(string $path): string
+{
+    // Leave empty, relative, protocol-relative, or absolute URLs untouched.
+    if ($path === '' || $path[0] !== '/' || str_starts_with($path, '//')) {
+        return $path;
+    }
+    return (defined('BASE_PATH') ? BASE_PATH : '') . $path;
+}
+
 function csrf_field(): string
 {
     return '<input type="hidden" name="_csrf" value="' . Csrf::token() . '">';

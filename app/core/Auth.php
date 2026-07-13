@@ -41,7 +41,7 @@ class Auth
     public static function checkMiddleware(string $middleware): bool
     {
         if ($middleware === 'auth' && !self::check()) {
-            header('Location: /login');
+            header('Location: ' . \app_url('/login'));
             return false;
         }
 

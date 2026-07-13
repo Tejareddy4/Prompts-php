@@ -40,15 +40,16 @@
 
 RewriteEngine On
 
-# Serve real static files from public/ directly (CSS, JS, images, uploads)
+# (A) Root deploy (doc root = project root): serve real files/dirs from public/
 RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
 RewriteRule ^(.*)$ public/$1 [L]
-
-# Serve real directories from public/ directly
 RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
 RewriteRule ^(.*)$ public/$1 [L]
 
-# Route everything else through index.php (the app entry point)
+# (B) Subfolder install (e.g. /prompts): serve static assets from public/
+RewriteRule ^(assets/.*|.*\.(?:css|js|png|jpe?g|webp|gif|svg|ico|woff2?|ttf|map|txt))$ public/$1 [L]
+
+# (C) Route everything else through index.php (the app entry point)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

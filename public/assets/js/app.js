@@ -1,8 +1,10 @@
+const BASE = window.BASE_PATH || '';
+
 async function postData(url, data) {
   const fd = new FormData();
   Object.entries(data).forEach(([k, v]) => fd.append(k, v));
   fd.append('_csrf', window.CSRF_TOKEN);
-  const res = await fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  const res = await fetch(BASE + url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
   return res.json();
 }
 
@@ -110,13 +112,13 @@ if (lmBtn) {
     const params = new URLSearchParams(window.location.search);
     params.set('page', page);
     if (lmBtn.dataset.cat) params.set('cat', lmBtn.dataset.cat);
-    const res = await fetch(`/prompts/load?${params}`);
+    const res = await fetch(`${BASE}/prompts/load?${params}`);
     const json = await res.json();
     const grid = document.getElementById('prompt-grid');
 
     json.data.forEach(item => {
       const a = document.createElement('a');
-      a.href = `/prompt/${item.slug}`;
+      a.href = `${BASE}/prompt/${item.slug}`;
       a.className = 'pcard';
       const initials = (item.author || 'U').substring(0, 2).toUpperCase();
       a.innerHTML = `

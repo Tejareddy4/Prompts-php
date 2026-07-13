@@ -1,6 +1,9 @@
 <?php
 $user = auth_user();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+if (defined('BASE_PATH') && BASE_PATH !== '' && str_starts_with($currentPath, BASE_PATH)) {
+    $currentPath = substr($currentPath, strlen(BASE_PATH)) ?: '/';
+}
 
 $privatePrefixes = ['/admin', '/dashboard', '/login', '/register', '/prompts/create', '/auth/'];
 $isPrivatePage = false;
@@ -260,7 +263,7 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 </nav>
 <?php endif; ?>
 
-<script>window.CSRF_TOKEN = '<?= e(App\Core\Csrf::token()) ?>';</script>
+<script>window.CSRF_TOKEN = '<?= e(App\Core\Csrf::token()) ?>'; window.BASE_PATH = '<?= defined('BASE_PATH') ? BASE_PATH : '' ?>';</script>
 <script src="/assets/js/app.js" defer></script>
 </body>
 </html>
