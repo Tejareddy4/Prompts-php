@@ -32,8 +32,12 @@ class Database
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $e) {
-            http_response_code(500);
-            exit('Database connection failed: ' . htmlspecialchars($e->getMessage()));
+            Logger::error('DB connection failed: ' . $e->getMessage(), [
+                'host' => $config['host'],
+                'db'   => $config['database'],
+            ]);
+            // Rethrow so the global handler shows the 500 page (no credentials leak).
+            throw $e;
         }
 
         return self::$pdo;

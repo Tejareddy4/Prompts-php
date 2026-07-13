@@ -54,7 +54,13 @@ class Router
             return;
         }
 
+        Logger::info("404 {$method} {$uri}", ['referer' => $_SERVER['HTTP_REFERER'] ?? null]);
         http_response_code(404);
-        echo '404 Not Found';
+        (new class(config()) extends Controller {
+            public function show(): void
+            {
+                $this->render('errors/404', ['pageTitle' => 'Page Not Found']);
+            }
+        })->show();
     }
 }

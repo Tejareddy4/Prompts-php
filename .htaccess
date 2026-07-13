@@ -40,6 +40,9 @@
 
 RewriteEngine On
 
+# Never serve application internals directly (logs, config, source)
+RewriteRule ^(app|config|database|routes|storage|vendor)(/|$) - [F,L]
+
 # (A) Root deploy (doc root = project root): serve real files/dirs from public/
 RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
 RewriteRule ^(.*)$ public/$1 [L]

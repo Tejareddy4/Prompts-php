@@ -36,6 +36,13 @@ return [
         'path'    => __DIR__ . '/../storage/cache',
         'ttl'     => (int)($_ENV['CACHE_TTL'] ?? 60),
     ],
+    'log' => [
+        'path'  => __DIR__ . '/../storage/logs',
+        // debug | info | warning | error — min level written to app-*.log
+        'level' => $_ENV['LOG_LEVEL'] ?? (($_ENV['APP_ENV'] ?? 'production') === 'local' ? 'debug' : 'info'),
+        // requests slower than this (ms) get a warning entry
+        'slow_ms' => (int)($_ENV['LOG_SLOW_MS'] ?? 1500),
+    ],
     'google_oauth' => [
         'enabled'      => filter_var($_ENV['GOOGLE_OAUTH_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
         'client_id'    => $_ENV['GOOGLE_CLIENT_ID']     ?? '',

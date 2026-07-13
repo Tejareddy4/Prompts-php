@@ -6,6 +6,7 @@ $navItems = [
   ['href' => '/admin/categories', 'icon' => 'bi-grid',            'label' => 'Categories'],
   ['href' => '/admin/users',      'icon' => 'bi-people',          'label' => 'Users'],
   ['href' => '/admin/analytics',  'icon' => 'bi-bar-chart-line',  'label' => 'Analytics'],
+  ['href' => '/admin/logs',       'icon' => 'bi-journal-text',    'label' => 'Logs'],
   ['href' => '/admin/settings',   'icon' => 'bi-gear',            'label' => 'Settings'],
 ];
 ?>

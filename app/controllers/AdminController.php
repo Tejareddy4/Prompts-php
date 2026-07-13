@@ -95,7 +95,8 @@ class AdminController extends Controller
             $stmt = $db->prepare('UPDATE prompts SET is_featured = :f, updated_at = NOW() WHERE id = :id');
             $stmt->execute(['f' => $set, 'id' => (int)$_POST['prompt_id']]);
         } catch (\Exception $e) {
-            // is_featured column not migrated yet — ignore
+            // is_featured column not migrated yet
+            \App\Core\Logger::warning('featurePrompt failed (is_featured column missing?): ' . $e->getMessage());
         }
         flash($set ? 'Prompt featured.' : 'Prompt unfeatured.', 'success');
         $this->redirect('/admin/prompts');
@@ -267,6 +268,29 @@ class AdminController extends Controller
         $this->clearHomeCache();
         flash('Category deleted. Its prompts are now uncategorized.', 'success');
         $this->redirect('/admin/categories');
+    }
+
+    // ── Logs ──────────────────────────────────────────────────
+
+    public function logs(): void
+    {
+        $files = \App\Core\Logger::files();
+        $file  = (string)($_GET['file'] ?? ($files[0] ?? ''));
+
+        $this->render('admin/logs', [
+            'pageTitle' => 'Logs',
+            'files'     => $files,
+            'file'      => $file,
+            'entries'   => $file !== '' ? \App\Core\Logger::tail($file, 300) : [],
+        ]);
+    }
+
+    public function clearLog(): void
+    {
+        if (!Csrf::validate($_POST['_csrf'] ?? null)) { $this->redirect('/admin/logs'); }
+        $file = (string)($_POST['file'] ?? '');
+        flash(\App\Core\Logger::clear($file) ? "Log {$file} cleared." : 'Could not clear that log.', 'success');
+        $this->redirect('/admin/logs');
     }
 
     // ── Settings ──────────────────────────────────────────────

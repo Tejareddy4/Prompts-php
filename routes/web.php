@@ -59,6 +59,9 @@ $router->post('/admin/users/delete',      [AdminController::class, 'deleteUser']
 
 $router->get('/admin/analytics',          [AdminController::class, 'analytics'],   ['auth', 'admin']);
 
+$router->get('/admin/logs',               [AdminController::class, 'logs'],        ['auth', 'admin']);
+$router->post('/admin/logs/clear',        [AdminController::class, 'clearLog'],    ['auth', 'admin']);
+
 $router->get('/admin/settings',           [AdminController::class, 'settings'],    ['auth', 'admin']);
 $router->post('/admin/settings/save',     [AdminController::class, 'saveSettings'],['auth', 'admin']);
 

@@ -60,11 +60,50 @@ $cfg = config();
 foreach ([
     $cfg['upload']['dir'] ?? null,
     $cfg['cache']['path'] ?? null,
+    $cfg['log']['path'] ?? null,
 ] as $dir) {
     if ($dir && !is_dir($dir)) {
         @mkdir($dir, 0755, true);
     }
 }
+
+// ── Logging + global error handlers ──────────────────────────
+\App\Core\Logger::init($cfg['log']);
+
+set_error_handler(function (int $no, string $msg, string $file, int $line): bool {
+    if (!(error_reporting() & $no)) {
+        return false; // suppressed with @
+    }
+    $level = in_array($no, [E_NOTICE, E_USER_NOTICE, E_DEPRECATED, E_USER_DEPRECATED], true)
+        ? 'info' : 'warning';
+    \App\Core\Logger::log($level, "PHP: $msg", ['at' => "$file:$line"]);
+    return false; // keep PHP's default behaviour (display_errors in dev)
+});
+
+register_shutdown_function(function (): void {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        \App\Core\Logger::error('FATAL: ' . $err['message'], ['at' => $err['file'] . ':' . $err['line']]);
+    }
+});
+
+/** Discard any partial output and show the styled 500 page. */
+function render_error_page(?Throwable $e = null): void
+{
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code(500);
+    $detail = (config('app.env') === 'local' && $e) ? $e : null;
+    require __DIR__ . '/../app/views/errors/500.php';
+}
+
+set_exception_handler(function (Throwable $e): void {
+    \App\Core\Logger::exception($e, 'Uncaught');
+    render_error_page($e);
+});
+
+$requestStart = microtime(true);
 
 $router = new Router();
 require __DIR__ . '/../routes/web.php';
@@ -79,7 +118,17 @@ $uri = $uri === '' ? '/' : $uri;
 // links (href/src/action="/…") can be prefixed with the base path. In a
 // root deploy BASE_PATH is '' and the output passes through untouched.
 ob_start();
-$router->dispatch($_SERVER['REQUEST_METHOD'], $uri);
+try {
+    $router->dispatch($_SERVER['REQUEST_METHOD'], $uri);
+} catch (Throwable $e) {
+    \App\Core\Logger::exception($e, 'Unhandled');
+    render_error_page($e);
+    exit;
+}
+$elapsedMs = (int) round((microtime(true) - $requestStart) * 1000);
+if ($elapsedMs > (int) ($cfg['log']['slow_ms'] ?? 1500)) {
+    \App\Core\Logger::warning("Slow request: {$elapsedMs}ms");
+}
 $html = ob_get_clean();
 if (BASE_PATH !== '') {
     $html = preg_replace(

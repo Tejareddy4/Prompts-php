@@ -54,6 +54,12 @@ function auth_user(): ?array
     return Auth::user();
 }
 
+// ── Logging shortcuts (channels: storage/logs/app-*.log + error-*.log) ──
+function log_debug(string $message, array $context = []): void   { \App\Core\Logger::debug($message, $context); }
+function log_info(string $message, array $context = []): void    { \App\Core\Logger::info($message, $context); }
+function log_warning(string $message, array $context = []): void { \App\Core\Logger::warning($message, $context); }
+function log_error(string $message, array $context = []): void   { \App\Core\Logger::error($message, $context); }
+
 function is_liked(array $prompt): bool
 {
     return (bool)($prompt['is_liked'] ?? false);
@@ -89,6 +95,7 @@ function all_categories(): array
         $db = \App\Core\Database::connection(config('db'));
         $cats = (new \App\Models\Category($db))->all();
     } catch (\Throwable $e) {
+        \App\Core\Logger::exception($e, 'all_categories failed');
         $cats = [];
     }
     return $cats;
