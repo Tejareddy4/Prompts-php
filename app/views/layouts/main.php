@@ -77,8 +77,15 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
   <div class="container">
     <a class="brand" href="/">
       <span class="brand-icon"><i class="bi bi-lightning-fill"></i></span>
-      PromptShare
+      <span class="brand-name">PromptShare</span>
     </a>
+
+    <!-- Search (all screen sizes) -->
+    <form method="get" action="/" class="nav-search" role="search">
+      <i class="bi bi-search nav-search-icon"></i>
+      <input type="search" name="q" placeholder="Search prompts…"
+             value="<?= e((string)($_GET['q'] ?? '')) ?>" autocomplete="off" aria-label="Search prompts">
+    </form>
 
     <!-- Desktop nav -->
     <div class="nav-desktop">

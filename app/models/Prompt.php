@@ -31,7 +31,9 @@ class Prompt extends Model
             $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :uid_like) AS is_liked,
                      EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :uid_save) AS is_saved';
         }
-        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.status_id = 2';
+        // Guard against broken rows: public lists never show titleless or imageless prompts
+        $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id
+                  WHERE p.status_id = 2 AND p.title != \'\' AND p.image_path IS NOT NULL AND p.image_path != \'\'';
 
         $params = [];
         $searching = !empty($filters['q']);
@@ -167,7 +169,7 @@ class Prompt extends Model
                 FROM prompts p
                 JOIN users u ON u.id = p.user_id
                 LEFT JOIN categories c ON c.id = p.category_id
-                WHERE p.status_id = 2 AND p.image_path IS NOT NULL AND p.image_path != \'\'';
+                WHERE p.status_id = 2 AND p.title != \'\' AND p.image_path IS NOT NULL AND p.image_path != \'\'';
 
         $params = [];
         if ($excludeIds !== []) {

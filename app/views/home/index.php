@@ -3,38 +3,14 @@ $q    = $filters['q'] ?? '';
 $sort = $filters['sort'] ?? 'for_you';
 $sortLabels = ['for_you'=>'For You','newest'=>'Newest','trending'=>'Trending','most_liked'=>'Top Liked','most_saved'=>'Most Saved','most_viewed'=>'Most Viewed'];
 $sortIcons  = ['for_you'=>'stars','newest'=>'clock','trending'=>'fire','most_liked'=>'heart-fill','most_saved'=>'bookmark-fill','most_viewed'=>'eye-fill'];
+$sortHeadings = ['for_you'=>'Recommended for you','newest'=>'Newest Prompts','trending'=>'Trending Now','most_liked'=>'Top Liked Prompts','most_saved'=>'Most Saved Prompts','most_viewed'=>'Most Viewed Prompts'];
 $listAction = $activeCategory ? '/category/' . $activeCategory['slug'] : '/';
 $sortFilters = $filters;
 unset($sortFilters['cat'], $sortFilters['top_cats']);
 ?>
 
 <?php if (!$activeCategory): ?>
-<!-- Hero -->
-<section class="hero">
-  <span class="hero-badge"><i class="bi bi-lightning-fill"></i> AI Prompt Marketplace</span>
-  <h1>Discover &amp; share<br>better AI prompts.</h1>
-  <p class="hero-sub">Find top-performing prompts for ChatGPT, Claude, Gemini &amp; more.</p>
-
-  <form method="get" action="/" class="hero-search">
-    <input type="text" name="q" placeholder="Search prompts…" value="<?= e($q) ?>" autocomplete="off">
-    <button type="submit"><i class="bi bi-search"></i> Search</button>
-  </form>
-
-  <div class="hero-stats">
-    <div>
-      <div class="hero-stat-num"><?= (int)($totalCount ?? 0) ?></div>
-      <div class="hero-stat-lbl">Prompts</div>
-    </div>
-    <div>
-      <div class="hero-stat-num"><?= (int)($totalLikes ?? 0) ?></div>
-      <div class="hero-stat-lbl">Likes</div>
-    </div>
-    <div>
-      <div class="hero-stat-num"><?= (int)($totalViews ?? 0) ?></div>
-      <div class="hero-stat-lbl">Views</div>
-    </div>
-  </div>
-</section>
+<h1 class="sr-only">Free AI Prompts for ChatGPT, Claude &amp; Gemini</h1>
 
 <?php if (!empty($slider)): ?>
 <!-- Featured slider -->
@@ -151,8 +127,8 @@ unset($sortFilters['cat'], $sortFilters['top_cats']);
     <?php if ($q): ?>
       <i class="bi bi-search"></i> &ldquo;<?= e($q) ?>&rdquo;
     <?php else: ?>
-      <i class="bi bi-fire text-danger"></i>
-      <?= $sortLabels[$sort] ?? 'Latest' ?> Prompts
+      <i class="bi bi-<?= $sortIcons[$sort] ?? 'fire' ?>" style="color:var(--p);"></i>
+      <?= $sortHeadings[$sort] ?? 'Latest Prompts' ?>
     <?php endif; ?>
   </h2>
   <?php if (!empty($prompts)): ?>

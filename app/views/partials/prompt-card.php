@@ -1,39 +1,19 @@
 <a href="/prompt/<?= e($item['slug']) ?>" class="pcard">
-  <div class="pcard-thumb">
-    <?php if (!empty($item['image_path'])): ?>
+  <?php if (!empty($item['image_path'])): ?>
+    <div class="pcard-thumb">
       <img loading="lazy" src="<?= e($item['image_path']) ?>" alt="<?= e($item['title']) ?>">
-    <?php else: ?>
-      <i class="bi bi-stars"></i>
-    <?php endif; ?>
-    <?php if (!empty($item['category_slug'])): ?>
-      <span class="pcard-cat cat-<?= e($item['category_color']) ?>"><i class="bi <?= e($item['category_icon']) ?>"></i> <?= e($item['category_name']) ?></span>
-    <?php endif; ?>
-  </div>
+    </div>
+  <?php endif; ?>
   <div class="pcard-body">
-    <div class="pcard-title"><?= e($item['title']) ?></div>
+    <h3 class="pcard-title"><?= e($item['title']) ?></h3>
     <?php if (!empty($item['description'])): ?>
-      <div class="pcard-desc"><?= e($item['description']) ?></div>
+      <p class="pcard-desc"><?= e($item['description']) ?></p>
     <?php endif; ?>
-    <div class="pcard-author">
-      <span class="avatar avatar-xs"><?= strtoupper(substr($item['author'] ?? 'U', 0, 2)) ?></span>
-      <?php if (!empty($item['author_username'])): ?>
-        <a href="/u/<?= e($item['author_username']) ?>" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">
-          <?= e($item['author']) ?>
-        </a>
-      <?php else: ?>
-        <?= e($item['author'] ?? 'Unknown') ?>
-      <?php endif; ?>
-    </div>
-    <div class="pcard-stats">
-      <span title="Likes"><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= (int)($item['likes_count'] ?? 0) ?></span>
-      <span title="Saves"><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= (int)($item['saves_count'] ?? 0) ?></span>
-      <span title="Views" style="margin-left:auto;"><i class="bi bi-eye-fill"></i> <?= (int)($item['views_count'] ?? 0) ?></span>
-    </div>
     <?php if (!empty($item['prompt_text'])): ?>
       <button type="button" class="pcard-copy js-card-copy"
               data-id="<?= (int)$item['id'] ?>"
               data-copy="<?= e($item['prompt_text']) ?>">
-        <i class="bi bi-clipboard"></i> Copy prompt
+        Copy
       </button>
     <?php endif; ?>
   </div>
