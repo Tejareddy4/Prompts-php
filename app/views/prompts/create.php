@@ -43,9 +43,9 @@
     </div>
 
     <div class="field">
-      <label for="image">Cover image <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
-      <input class="file-input" id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp">
-      <div class="hint">JPEG, PNG or WebP — max 5MB</div>
+      <label for="image">Cover image <span class="req">*</span></label>
+      <input class="file-input" id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
+      <div class="hint">Required — JPEG, PNG or WebP, max 5MB. Prompts without an image are rejected.</div>
     </div>
 
     <div style="display:flex;gap:0.5rem;justify-content:flex-end;padding-top:0.5rem;">

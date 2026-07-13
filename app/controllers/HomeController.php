@@ -47,6 +47,16 @@ class HomeController extends Controller
             $prompts = $promptModel->paginateApproved(12, 0, Auth::id(), $filters);
         }
 
+        // Hero slider (5) + Top Picks (3) — only on the plain homepage
+        $slider = $topPicks = [];
+        if (!$category && empty($filters['q'])) {
+            $slider = $cache->remember('home_slider', fn() => $promptModel->topByEngagement(5));
+            $topPicks = $cache->remember(
+                'home_top_picks',
+                fn() => $promptModel->topByEngagement(3, array_column($slider, 'id'))
+            );
+        }
+
         $analytics = $promptModel->analytics();
 
         $pageTitle = $category ? $category['name'] . ' Prompts' : 'Free AI Prompts for ChatGPT, Claude & Gemini';
@@ -56,6 +66,8 @@ class HomeController extends Controller
 
         $this->render('home/index', [
             'prompts' => $prompts,
+            'slider' => $slider,
+            'topPicks' => $topPicks,
             'filters' => $filters,
             'categories' => $categoryModel->withCounts(),
             'activeCategory' => $category,

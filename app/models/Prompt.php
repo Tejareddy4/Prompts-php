@@ -71,6 +71,54 @@ class Prompt extends Model
         return $stmt->fetchAll();
     }
 
+    /**
+     * Best prompts by a blend of signals — featured first, then engagement
+     * (likes/saves/copies/views), trending score, and a small recency boost.
+     * Used for the homepage hero slider and Top Picks.
+     */
+    public function topByEngagement(int $limit, array $excludeIds = []): array
+    {
+        $sql = 'SELECT p.*, u.name AS author,
+                    COALESCE(u.username, \'\') AS author_username,
+                    ' . self::CATEGORY_FIELDS . ',
+                    (SELECT COUNT(*) FROM likes l WHERE l.prompt_id = p.id) AS likes_count,
+                    (SELECT COUNT(*) FROM saves s WHERE s.prompt_id = p.id) AS saves_count,
+                    (SELECT COUNT(*) FROM copies c2 WHERE c2.prompt_id = p.id) AS copies_count,
+                    (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count,
+                    (p.is_featured * 1000
+                     + (SELECT COUNT(*) FROM likes l3 WHERE l3.prompt_id = p.id) * 4
+                     + (SELECT COUNT(*) FROM saves s3 WHERE s3.prompt_id = p.id) * 3
+                     + (SELECT COUNT(*) FROM copies c3 WHERE c3.prompt_id = p.id) * 2
+                     + (SELECT COUNT(*) FROM views v3 WHERE v3.prompt_id = p.id) * 0.5
+                     + p.trending_score
+                     + GREATEST(0, 30 - DATEDIFF(NOW(), p.created_at)) * 0.5
+                    ) AS mix_score
+                FROM prompts p
+                JOIN users u ON u.id = p.user_id
+                LEFT JOIN categories c ON c.id = p.category_id
+                WHERE p.status_id = 2 AND p.image_path IS NOT NULL AND p.image_path != \'\'';
+
+        $params = [];
+        if ($excludeIds !== []) {
+            $marks = [];
+            foreach (array_values($excludeIds) as $i => $id) {
+                $marks[] = ":ex{$i}";
+                $params[":ex{$i}"] = (int) $id;
+            }
+            $sql .= ' AND p.id NOT IN (' . implode(',', $marks) . ')';
+        }
+
+        $sql .= ' ORDER BY mix_score DESC, p.created_at DESC LIMIT :limit';
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, \PDO::PARAM_INT);
+        }
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function findBySlug(string $slug, ?int $userId = null): ?array
     {
         $sql = 'SELECT p.*, u.name AS author,
