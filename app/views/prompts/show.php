@@ -1,46 +1,48 @@
 <nav class="show-back" aria-label="Breadcrumb">
   <a href="/"><i class="bi bi-arrow-left"></i> Explore</a>
   <?php if (!empty($prompt['category_slug'])): ?>
-    <span style="opacity:.4;">/</span>
+    <span class="sep">/</span>
     <a href="/category/<?= e($prompt['category_slug']) ?>"><?= e($prompt['category_name']) ?></a>
   <?php endif; ?>
 </nav>
 
-<!-- Header -->
-<div class="show-header">
+<!-- Page header -->
+<header class="show-head">
   <?php if (!empty($prompt['category_slug'])): ?>
     <?= category_badge($prompt, 'lg') ?>
   <?php endif; ?>
   <h1><?= e($prompt['title']) ?></h1>
-  <div class="show-author">
+  <div class="show-meta">
     <span class="avatar avatar-xs"><?= strtoupper(substr($prompt['author'] ?? 'U', 0, 2)) ?></span>
-    by
     <?php if (!empty($prompt['author_username'])): ?>
-      <a href="/u/<?= e($prompt['author_username']) ?>" style="color:rgba(255,255,255,.9);font-weight:700;">
-        <?= e($prompt['author']) ?>
-      </a>
+      <a href="/u/<?= e($prompt['author_username']) ?>"><?= e($prompt['author']) ?></a>
     <?php else: ?>
-      <strong><?= e($prompt['author']) ?></strong>
+      <span class="show-meta-author"><?= e($prompt['author']) ?></span>
     <?php endif; ?>
+    <span class="dot">·</span>
+    <span><?= date('M j, Y', strtotime($prompt['created_at'])) ?></span>
+    <span class="dot">·</span>
+    <span><i class="bi bi-eye"></i> <?= number_format((int)$prompt['views_count']) ?> views</span>
   </div>
-</div>
+</header>
 
-<!-- Layout: stacked on mobile, side-by-side on desktop -->
-<div style="display:flex;flex-direction:column;gap:1rem;">
+<div class="show-layout">
 
-  <!-- Main -->
-  <div style="flex:1;min-width:0;">
+  <!-- Main column -->
+  <div class="show-main">
 
     <?php if (!empty($prompt['image_path'])): ?>
-      <div class="show-card" style="padding:0;overflow:hidden;margin-bottom:1rem;">
-        <img src="<?= e($prompt['image_path']) ?>" alt="<?= e($prompt['title']) ?>"
-             style="width:100%;max-height:280px;object-fit:cover;display:block;">
-      </div>
+      <figure class="show-card show-media">
+        <img src="<?= e($prompt['image_path']) ?>" alt="<?= e($prompt['title']) ?>">
+      </figure>
     <?php endif; ?>
 
     <?php if (!empty($prompt['description'])): ?>
-      <div class="show-card" style="margin-bottom:1rem;">
-        <div class="show-card-body" style="color:var(--muted);font-size:0.9rem;line-height:1.7;">
+      <div class="show-card">
+        <div class="show-card-head">
+          <h2><i class="bi bi-info-circle"></i> About this prompt</h2>
+        </div>
+        <div class="show-card-body show-desc">
           <?= nl2br(e($prompt['description'])) ?>
         </div>
       </div>
@@ -49,7 +51,8 @@
     <!-- Prompt text -->
     <div class="show-card">
       <div class="show-card-head">
-        <h2><i class="bi bi-code-slash" style="color:var(--p);"></i> Prompt</h2>
+        <h2><i class="bi bi-code-slash"></i> Prompt</h2>
+        <span class="show-wordcount"><?= number_format(str_word_count($prompt['prompt_text'])) ?> words</span>
         <button class="btn btn-sm btn-outline" id="copy-btn" onclick="copyPrompt(this)">
           <i class="bi bi-clipboard"></i> Copy
         </button>
@@ -59,47 +62,83 @@
       </div>
     </div>
 
-    <!-- Sticky action bar on mobile -->
-    <div class="show-actions" data-prompt-id="<?= (int)$prompt['id'] ?>">
-      <button class="btn <?= !empty($prompt['is_liked']) ? 'btn-danger-fill' : 'btn-danger-outline' ?> js-like" style="flex:1;justify-content:center;"
-              aria-pressed="<?= !empty($prompt['is_liked']) ? 'true' : 'false' ?>">
-        <i class="bi bi-heart<?= !empty($prompt['is_liked']) ? '-fill' : '' ?>"></i>
-        <span><?= !empty($prompt['is_liked']) ? 'Liked' : 'Like' ?></span>
-        <span class="count" style="font-weight:800;"><?= (int)$prompt['likes_count'] ?></span>
-      </button>
-      <button class="btn <?= !empty($prompt['is_saved']) ? 'btn-save-fill' : 'btn-save-outline' ?> js-save" style="flex:1;justify-content:center;"
-              aria-pressed="<?= !empty($prompt['is_saved']) ? 'true' : 'false' ?>">
-        <i class="bi bi-bookmark<?= !empty($prompt['is_saved']) ? '-fill' : '' ?>"></i>
-        <span><?= !empty($prompt['is_saved']) ? 'Saved' : 'Save' ?></span>
-        <span class="count" style="font-weight:800;"><?= (int)$prompt['saves_count'] ?></span>
-      </button>
-      <button class="btn btn-outline js-copy" style="flex:1;justify-content:center;">
-        <i class="bi bi-clipboard"></i>
-        <span class="count"><?= (int)$prompt['copies_count'] ?></span>
-      </button>
-    </div>
-
   </div>
 
-  <!-- Sidebar stats (desktop only, hidden on mobile since sticky bar handles it) -->
-  <div style="width:100%;max-width:260px;display:none;" class="show-sidebar">
+  <!-- Actions: sticky bar on mobile, sidebar card on desktop -->
+  <div class="show-actions" data-prompt-id="<?= (int)$prompt['id'] ?>">
+    <button class="btn <?= !empty($prompt['is_liked']) ? 'btn-danger-fill' : 'btn-danger-outline' ?> js-like"
+            aria-pressed="<?= !empty($prompt['is_liked']) ? 'true' : 'false' ?>">
+      <i class="bi bi-heart<?= !empty($prompt['is_liked']) ? '-fill' : '' ?>"></i>
+      <span><?= !empty($prompt['is_liked']) ? 'Liked' : 'Like' ?></span>
+      <span class="count"><?= (int)$prompt['likes_count'] ?></span>
+    </button>
+    <button class="btn <?= !empty($prompt['is_saved']) ? 'btn-save-fill' : 'btn-save-outline' ?> js-save"
+            aria-pressed="<?= !empty($prompt['is_saved']) ? 'true' : 'false' ?>">
+      <i class="bi bi-bookmark<?= !empty($prompt['is_saved']) ? '-fill' : '' ?>"></i>
+      <span><?= !empty($prompt['is_saved']) ? 'Saved' : 'Save' ?></span>
+      <span class="count"><?= (int)$prompt['saves_count'] ?></span>
+    </button>
+    <button class="btn btn-primary js-copy act-copy">
+      <i class="bi bi-clipboard"></i>
+      <span>Copy<span class="act-copy-ext"> Prompt</span></span>
+      <span class="count"><?= (int)$prompt['copies_count'] ?></span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="show-side">
+
     <div class="show-card">
-      <div class="show-card-head"><h2><i class="bi bi-bar-chart-line" style="color:var(--p)"></i> Stats</h2></div>
+      <div class="show-card-head">
+        <h2><i class="bi bi-bar-chart-line"></i> Stats</h2>
+      </div>
       <div class="show-card-body">
-        <div class="stat-row">
-          <div class="stat-pill"><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= (int)$prompt['likes_count'] ?> likes</div>
-          <div class="stat-pill"><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= (int)$prompt['saves_count'] ?> saves</div>
-          <div class="stat-pill"><i class="bi bi-clipboard" style="color:var(--muted)"></i> <?= (int)$prompt['copies_count'] ?> copies</div>
-          <div class="stat-pill"><i class="bi bi-eye-fill" style="color:var(--muted)"></i> <?= (int)$prompt['views_count'] ?> views</div>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="val"><i class="bi bi-heart-fill" style="color:#EF4444;"></i> <?= number_format((int)$prompt['likes_count']) ?></div>
+            <div class="lbl">Likes</div>
+          </div>
+          <div class="stat-tile">
+            <div class="val"><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> <?= number_format((int)$prompt['saves_count']) ?></div>
+            <div class="lbl">Saves</div>
+          </div>
+          <div class="stat-tile">
+            <div class="val"><i class="bi bi-clipboard-fill" style="color:#8B5CF6;"></i> <?= number_format((int)$prompt['copies_count']) ?></div>
+            <div class="lbl">Copies</div>
+          </div>
+          <div class="stat-tile">
+            <div class="val"><i class="bi bi-eye-fill" style="color:#10B981;"></i> <?= number_format((int)$prompt['views_count']) ?></div>
+            <div class="lbl">Views</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <?php if (!empty($prompt['author_username'])): ?>
+      <a href="/u/<?= e($prompt['author_username']) ?>" class="show-card author-card">
+        <span class="avatar avatar-md"><?= strtoupper(substr($prompt['author'] ?? 'U', 0, 2)) ?></span>
+        <span class="author-card-info">
+          <span class="nm"><?= e($prompt['author']) ?></span>
+          <span class="hd">@<?= e($prompt['author_username']) ?></span>
+        </span>
+        <i class="bi bi-chevron-right chev"></i>
+      </a>
+    <?php else: ?>
+      <div class="show-card author-card">
+        <span class="avatar avatar-md"><?= strtoupper(substr($prompt['author'] ?? 'U', 0, 2)) ?></span>
+        <span class="author-card-info">
+          <span class="nm"><?= e($prompt['author']) ?></span>
+          <span class="hd">Creator</span>
+        </span>
+      </div>
+    <?php endif; ?>
+
+  </aside>
 
 </div>
 
 <?php if (!empty($related)): ?>
-  <div style="margin-top:1.5rem;">
+  <div class="show-related">
     <div class="section-hd">
       <h2><i class="bi bi-collection" style="color:var(--p);"></i> Related Prompts</h2>
     </div>
@@ -113,13 +152,6 @@
     </div>
   </div>
 <?php endif; ?>
-
-<style>
-@media (min-width: 768px) {
-  .show-sidebar { display: block !important; }
-  div:has(> .show-sidebar) { flex-direction: row !important; align-items: flex-start; }
-}
-</style>
 
 <?php
 $base = rtrim(config('app.base_url'), '/');

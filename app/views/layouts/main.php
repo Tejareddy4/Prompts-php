@@ -64,9 +64,9 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/assets/css/app.css" rel="stylesheet">
+  <link href="<?= asset('/assets/css/app.css') ?>" rel="stylesheet">
   <?php if (str_starts_with($currentPath, '/admin')): ?>
-  <link href="/assets/css/admin.css" rel="stylesheet">
+  <link href="<?= asset('/assets/css/admin.css') ?>" rel="stylesheet">
   <?php endif; ?>
 </head>
 <body>
@@ -264,6 +264,6 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 <?php endif; ?>
 
 <script>window.CSRF_TOKEN = '<?= e(App\Core\Csrf::token()) ?>'; window.BASE_PATH = '<?= defined('BASE_PATH') ? BASE_PATH : '' ?>';</script>
-<script src="/assets/js/app.js" defer></script>
+<script src="<?= asset('/assets/js/app.js') ?>" defer></script>
 </body>
 </html>

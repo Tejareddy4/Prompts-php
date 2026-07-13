@@ -44,6 +44,14 @@ function app_url(string $path): string
     return (defined('BASE_PATH') ? BASE_PATH : '') . $path;
 }
 
+/** Asset URL with a file-mtime version param, so long-lived browser caches bust on change. */
+function asset(string $path): string
+{
+    $file = dirname(__DIR__, 2) . '/public' . $path;
+    $v = is_file($file) ? filemtime($file) : null;
+    return $path . ($v ? '?v=' . $v : '');
+}
+
 function csrf_field(): string
 {
     return '<input type="hidden" name="_csrf" value="' . Csrf::token() . '">';
