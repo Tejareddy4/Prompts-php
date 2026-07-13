@@ -334,7 +334,10 @@ class AdminController extends Controller
 
     private function clearHomeCache(): void
     {
-        (new Cache($this->config['cache']))->forget('home_page_1');
+        $cache = new Cache($this->config['cache']);
+        foreach (['home_page_1', 'home_slider', 'home_top_picks'] as $key) {
+            $cache->forget($key);
+        }
     }
 
     private function changeStatus(int $status, string $message): void

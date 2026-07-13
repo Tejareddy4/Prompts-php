@@ -38,6 +38,9 @@ class PromptService
 
         $slug      = $this->makeSlug($title);
         $imagePath = $this->handleUpload($file);
+        if ($imagePath === null) {
+            return ['ok' => false, 'error' => 'A preview image is required (JPG, PNG or WebP, max 5 MB).'];
+        }
 
         $id = $this->promptModel->create([
             'user_id'     => $userId,
@@ -74,6 +77,9 @@ class PromptService
         $newImage  = $this->handleUpload($file);
         if ($newImage !== null) {
             $imagePath = $newImage;
+        }
+        if ($imagePath === null || $imagePath === '') {
+            return ['ok' => false, 'error' => 'A preview image is required (JPG, PNG or WebP, max 5 MB).'];
         }
 
         $this->promptModel->update($promptId, [
