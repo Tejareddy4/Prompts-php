@@ -60,8 +60,9 @@ $allPrompts = array_merge(
           <table class="adm-table prompt-table">
             <thead>
               <tr>
-                <th style="width:40%;">Title</th>
+                <th style="width:34%;">Title</th>
                 <th>Author</th>
+                <th>Category</th>
                 <th>Stats</th>
                 <th>Date</th>
                 <th>Actions</th>
@@ -81,6 +82,21 @@ $allPrompts = array_merge(
                     <span class="avatar avatar-xs"><?= strtoupper(substr($r['author'] ?? 'U', 0, 2)) ?></span>
                     <?= e($r['author']) ?>
                   </div>
+                </td>
+                <td>
+                  <form method="post" action="/admin/prompts/category" style="display:inline;">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="prompt_id" value="<?= (int)$r['id'] ?>">
+                    <select name="category_id" class="adm-select-sm <?= empty($r['category_id']) ? 'adm-select-warn' : '' ?>"
+                            onchange="this.form.submit()">
+                      <option value="0" <?= empty($r['category_id']) ? 'selected' : '' ?>>— None —</option>
+                      <?php foreach ($categories as $cat): ?>
+                        <option value="<?= (int)$cat['id'] ?>" <?= (int)($r['category_id'] ?? 0) === (int)$cat['id'] ? 'selected' : '' ?>>
+                          <?= e($cat['name']) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                  </form>
                 </td>
                 <td>
                   <div class="adm-stats-mini">

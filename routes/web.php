@@ -46,6 +46,11 @@ $router->post('/admin/prompts/approve',   [AdminController::class, 'approve'],  
 $router->post('/admin/prompts/reject',    [AdminController::class, 'reject'],      ['auth', 'admin']);
 $router->post('/admin/prompts/delete',    [AdminController::class, 'deletePrompt'],['auth', 'admin']);
 $router->post('/admin/prompts/feature',   [AdminController::class, 'featurePrompt'],['auth', 'admin']);
+$router->post('/admin/prompts/category',  [AdminController::class, 'setPromptCategory'], ['auth', 'admin']);
+
+$router->get('/admin/categories',         [AdminController::class, 'categories'],     ['auth', 'admin']);
+$router->post('/admin/categories/save',   [AdminController::class, 'saveCategory'],   ['auth', 'admin']);
+$router->post('/admin/categories/delete', [AdminController::class, 'deleteCategory'], ['auth', 'admin']);
 
 $router->get('/admin/users',              [AdminController::class, 'users'],       ['auth', 'admin']);
 $router->post('/admin/users/ban',         [AdminController::class, 'banUser'],     ['auth', 'admin']);

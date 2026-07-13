@@ -3,6 +3,7 @@ $adminPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/admin';
 $navItems = [
   ['href' => '/admin',            'icon' => 'bi-speedometer2',   'label' => 'Dashboard'],
   ['href' => '/admin/prompts',    'icon' => 'bi-file-text',       'label' => 'Prompts'],
+  ['href' => '/admin/categories', 'icon' => 'bi-grid',            'label' => 'Categories'],
   ['href' => '/admin/users',      'icon' => 'bi-people',          'label' => 'Users'],
   ['href' => '/admin/analytics',  'icon' => 'bi-bar-chart-line',  'label' => 'Analytics'],
   ['href' => '/admin/settings',   'icon' => 'bi-gear',            'label' => 'Settings'],

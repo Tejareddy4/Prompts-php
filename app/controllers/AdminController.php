@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Cache;
 use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Models\Category;
 use App\Models\Prompt;
 use App\Models\User;
 
@@ -43,11 +45,26 @@ class AdminController extends Controller
         $promptModel = new Prompt($db);
 
         $this->render('admin/prompts', [
-            'pageTitle' => 'Manage Prompts',
-            'pending'   => $promptModel->findByStatus(1),
-            'approved'  => $promptModel->findByStatus(2),
-            'rejected'  => $promptModel->findByStatus(3),
+            'pageTitle'  => 'Manage Prompts',
+            'pending'    => $promptModel->findByStatus(1),
+            'approved'   => $promptModel->findByStatus(2),
+            'rejected'   => $promptModel->findByStatus(3),
+            'categories' => (new Category($db))->all(),
         ]);
+    }
+
+    /** Quick category re-assign from the prompts table. */
+    public function setPromptCategory(): void
+    {
+        if (!Csrf::validate($_POST['_csrf'] ?? null)) { $this->redirect('/admin/prompts'); }
+        $db         = Database::connection($this->config['db']);
+        $categoryId = (int)($_POST['category_id'] ?? 0);
+        if ($categoryId > 0 && !(new Category($db))->findById($categoryId)) { $this->redirect('/admin/prompts'); }
+        $stmt = $db->prepare('UPDATE prompts SET category_id = :cat, updated_at = NOW() WHERE id = :id');
+        $stmt->execute(['cat' => $categoryId > 0 ? $categoryId : null, 'id' => (int)$_POST['prompt_id']]);
+        $this->clearHomeCache();
+        flash('Prompt category updated.', 'success');
+        $this->redirect('/admin/prompts');
     }
 
     public function approve(): void
@@ -181,6 +198,77 @@ class AdminController extends Controller
         ]);
     }
 
+    // ── Category management ───────────────────────────────────
+
+    public function categories(): void
+    {
+        $db = Database::connection($this->config['db']);
+
+        $this->render('admin/categories', [
+            'pageTitle'  => 'Manage Categories',
+            'categories' => (new Category($db))->withTotalCounts(),
+            'uncategorized' => (int) $db->query('SELECT COUNT(*) FROM prompts WHERE category_id IS NULL')->fetchColumn(),
+        ]);
+    }
+
+    public function saveCategory(): void
+    {
+        if (!Csrf::validate($_POST['_csrf'] ?? null)) { $this->redirect('/admin/categories'); }
+        $db    = Database::connection($this->config['db']);
+        $model = new Category($db);
+
+        $id    = (int)($_POST['id'] ?? 0);
+        $name  = trim((string)($_POST['name'] ?? ''));
+        $slug  = trim((string)($_POST['slug'] ?? ''));
+        $icon  = trim((string)($_POST['icon'] ?? '')) ?: 'bi-stars';
+        $color = trim((string)($_POST['color'] ?? '')) ?: 'violet';
+        $sort  = (int)($_POST['sort_order'] ?? 0);
+
+        if ($name === '') {
+            flash('Category name is required.', 'error');
+            $this->redirect('/admin/categories');
+        }
+
+        $slug = $this->slugify($slug !== '' ? $slug : $name);
+        if ($slug === '' || $model->slugExists($slug, $id ?: null)) {
+            flash($slug === '' ? 'Could not build a valid slug.' : "Slug \"{$slug}\" is already in use.", 'error');
+            $this->redirect('/admin/categories');
+        }
+
+        $allowedColors = ['violet','blue','pink','orange','green','cyan','red','indigo','teal','gray'];
+        if (!in_array($color, $allowedColors, true)) { $color = 'violet'; }
+        if (!preg_match('/^bi-[a-z0-9-]+$/', $icon))  { $icon  = 'bi-stars'; }
+
+        $data = [
+            'name'       => mb_substr($name, 0, 60),
+            'slug'       => mb_substr($slug, 0, 60),
+            'icon'       => $icon,
+            'color'      => $color,
+            'sort_order' => $sort > 0 ? $sort : $model->nextSortOrder(),
+        ];
+
+        if ($id > 0) {
+            $model->update($id, $data);
+            flash('Category updated.', 'success');
+        } else {
+            $model->create($data);
+            flash('Category created.', 'success');
+        }
+
+        $this->clearHomeCache();
+        $this->redirect('/admin/categories');
+    }
+
+    public function deleteCategory(): void
+    {
+        if (!Csrf::validate($_POST['_csrf'] ?? null)) { $this->redirect('/admin/categories'); }
+        $db = Database::connection($this->config['db']);
+        (new Category($db))->delete((int)$_POST['category_id']);
+        $this->clearHomeCache();
+        flash('Category deleted. Its prompts are now uncategorized.', 'success');
+        $this->redirect('/admin/categories');
+    }
+
     // ── Settings ──────────────────────────────────────────────
 
     public function settings(): void
@@ -214,6 +302,16 @@ class AdminController extends Controller
     }
 
     // ── Private helpers ───────────────────────────────────────
+
+    private function slugify(string $value): string
+    {
+        return trim(strtolower(preg_replace('/[^A-Za-z0-9]+/', '-', $value)), '-');
+    }
+
+    private function clearHomeCache(): void
+    {
+        (new Cache($this->config['cache']))->forget('home_page_1');
+    }
 
     private function changeStatus(int $status, string $message): void
     {
