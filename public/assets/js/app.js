@@ -6,6 +6,24 @@ async function postData(url, data) {
   return res.json();
 }
 
+// Dropdown menus (replaces Bootstrap JS) — toggle .show, close on outside click / Esc
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('[data-bs-toggle="dropdown"]');
+  const openMenus = document.querySelectorAll('.dropdown-menu.show');
+  if (toggle) {
+    e.preventDefault();
+    const menu = toggle.closest('.dropdown')?.querySelector('.dropdown-menu');
+    const wasOpen = menu?.classList.contains('show');
+    openMenus.forEach(m => m.classList.remove('show'));
+    if (menu && !wasOpen) menu.classList.add('show');
+  } else if (!e.target.closest('.dropdown-menu')) {
+    openMenus.forEach(m => m.classList.remove('show'));
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+});
+
 // One-click copy directly from a prompt card (no navigation)
 document.addEventListener('click', async (e) => {
   const copyBtn = e.target.closest('.js-card-copy');

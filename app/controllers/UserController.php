@@ -26,7 +26,7 @@ class UserController extends Controller
         $promptModel = new Prompt($db);
 
         $this->render('user/profile', [
-            'pageTitle'       => $user['name'] . ' — PromptShare',
+            'pageTitle'       => $user['name'],
             'metaDescription' => 'Browse prompts by ' . $user['name'] . ' on PromptShare.',
             'profile'         => $user,
             'prompts'         => $promptModel->approvedByUser((int) $user['id']),

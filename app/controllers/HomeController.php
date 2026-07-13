@@ -49,7 +49,7 @@ class HomeController extends Controller
 
         $analytics = $promptModel->analytics();
 
-        $pageTitle = $category ? $category['name'] . ' Prompts' : 'Discover Prompts';
+        $pageTitle = $category ? $category['name'] . ' Prompts' : 'Free AI Prompts for ChatGPT, Claude & Gemini';
         $metaDescription = $category
             ? 'Browse free ' . $category['name'] . ' AI prompts for ChatGPT, Claude & Gemini. Copy and use instantly.'
             : 'Discover and share high-performing AI prompts for ChatGPT, Claude, Gemini & more.';

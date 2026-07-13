@@ -116,12 +116,12 @@ class User extends Model
             // Per-user stats
             $stmt = $this->db->prepare(
                 'SELECT
-                    (SELECT COUNT(*) FROM prompts p WHERE p.user_id = :uid AND p.status_id = 2) AS prompt_count,
-                    (SELECT COUNT(*) FROM likes l JOIN prompts p ON p.id = l.prompt_id WHERE p.user_id = :uid) AS total_likes,
-                    (SELECT COUNT(*) FROM saves s JOIN prompts p ON p.id = s.prompt_id WHERE p.user_id = :uid) AS total_saves,
-                    (SELECT COUNT(*) FROM views v JOIN prompts p ON p.id = v.prompt_id WHERE p.user_id = :uid) AS total_views'
+                    (SELECT COUNT(*) FROM prompts p WHERE p.user_id = :uid1 AND p.status_id = 2) AS prompt_count,
+                    (SELECT COUNT(*) FROM likes l JOIN prompts p ON p.id = l.prompt_id WHERE p.user_id = :uid2) AS total_likes,
+                    (SELECT COUNT(*) FROM saves s JOIN prompts p ON p.id = s.prompt_id WHERE p.user_id = :uid3) AS total_saves,
+                    (SELECT COUNT(*) FROM views v JOIN prompts p ON p.id = v.prompt_id WHERE p.user_id = :uid4) AS total_views'
             );
-            $stmt->execute(['uid' => $userId]);
+            $stmt->execute(['uid1' => $userId, 'uid2' => $userId, 'uid3' => $userId, 'uid4' => $userId]);
             return $stmt->fetch() ?: ['prompt_count' => 0, 'total_likes' => 0, 'total_saves' => 0, 'total_views' => 0];
         }
 

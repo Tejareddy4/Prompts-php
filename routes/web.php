@@ -8,6 +8,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Controllers\PromptController;
 use App\Controllers\SeoController;
+use App\Controllers\UserController;
 
 // ── Public routes ──────────────────────────────────────────────
 $router->get('/', [HomeController::class, 'index']);
@@ -26,6 +27,7 @@ $router->get('/auth/google/callback', [AuthController::class, 'googleCallback'])
 
 // ── Prompts ────────────────────────────────────────────────────
 $router->get('/prompt/{slug}',        [PromptController::class, 'show']);
+$router->get('/u/{username}',         [UserController::class, 'profile']);
 $router->get('/prompts/create',       [PromptController::class, 'createForm'],  ['auth']);
 $router->post('/prompts',             [PromptController::class, 'store'],       ['auth']);
 $router->get('/prompts/{id}/edit',    [PromptController::class, 'editForm'],    ['auth']);
