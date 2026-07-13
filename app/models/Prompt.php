@@ -27,15 +27,19 @@ class Prompt extends Model
                     (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,
                     (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count';
         if ($userId) {
-            $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :user_id) AS is_liked,
-                     EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :user_id) AS is_saved';
+            // Placeholders must be unique: emulated prepares are off (Database.php)
+            $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :uid_like) AS is_liked,
+                     EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :uid_save) AS is_saved';
         }
         $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.status_id = 2';
 
         $params = [];
         if (!empty($filters['q'])) {
-            $sql .= ' AND (p.title LIKE :search OR p.description LIKE :search OR p.prompt_text LIKE :search)';
-            $params['search'] = '%' . $filters['q'] . '%';
+            $sql .= ' AND (p.title LIKE :search_title OR p.description LIKE :search_desc OR p.prompt_text LIKE :search_text)';
+            $searchTerm = '%' . $filters['q'] . '%';
+            $params['search_title'] = $searchTerm;
+            $params['search_desc']  = $searchTerm;
+            $params['search_text']  = $searchTerm;
         }
         if (!empty($filters['cat'])) {
             $sql .= ' AND c.slug = :cat';
@@ -55,7 +59,8 @@ class Prompt extends Model
 
         $stmt = $this->db->prepare($sql);
         if ($userId) {
-            $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':uid_like', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':uid_save', $userId, \PDO::PARAM_INT);
         }
         foreach ($params as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
@@ -76,13 +81,14 @@ class Prompt extends Model
             (SELECT COUNT(*) FROM copies c WHERE c.prompt_id = p.id) AS copies_count,
             (SELECT COUNT(*) FROM views v WHERE v.prompt_id = p.id) AS views_count';
         if ($userId) {
-            $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :user_id) AS is_liked,
-                     EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :user_id) AS is_saved';
+            $sql .= ', EXISTS(SELECT 1 FROM likes l2 WHERE l2.prompt_id = p.id AND l2.user_id = :uid_like) AS is_liked,
+                     EXISTS(SELECT 1 FROM saves s2 WHERE s2.prompt_id = p.id AND s2.user_id = :uid_save) AS is_saved';
         }
         $sql .= ' FROM prompts p JOIN users u ON u.id = p.user_id LEFT JOIN categories c ON c.id = p.category_id WHERE p.slug = :slug AND p.status_id = 2 LIMIT 1';
         $stmt = $this->db->prepare($sql);
         if ($userId) {
-            $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':uid_like', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':uid_save', $userId, \PDO::PARAM_INT);
         }
         $stmt->bindValue(':slug', $slug);
         $stmt->execute();
@@ -206,13 +212,19 @@ class Prompt extends Model
         // Score = likes*3 + saves*2 + copies*1.5 + views*0.1, decaying by age in days
         $this->db->prepare(
             'UPDATE prompts SET trending_score = (
-                (SELECT COUNT(*) FROM likes   WHERE prompt_id = :id) * 3   +
-                (SELECT COUNT(*) FROM saves   WHERE prompt_id = :id) * 2   +
-                (SELECT COUNT(*) FROM copies  WHERE prompt_id = :id) * 1.5 +
-                (SELECT COUNT(*) FROM views   WHERE prompt_id = :id) * 0.1
+                (SELECT COUNT(*) FROM likes   WHERE prompt_id = :id_likes)  * 3   +
+                (SELECT COUNT(*) FROM saves   WHERE prompt_id = :id_saves)  * 2   +
+                (SELECT COUNT(*) FROM copies  WHERE prompt_id = :id_copies) * 1.5 +
+                (SELECT COUNT(*) FROM views   WHERE prompt_id = :id_views)  * 0.1
              ) / POW(GREATEST(1, DATEDIFF(NOW(), created_at)), 0.8)
              WHERE id = :id'
-        )->execute(['id' => $promptId]);
+        )->execute([
+            'id_likes'  => $promptId,
+            'id_saves'  => $promptId,
+            'id_copies' => $promptId,
+            'id_views'  => $promptId,
+            'id'        => $promptId,
+        ]);
     }
 
     private function fulltextQuery(string $q): string
