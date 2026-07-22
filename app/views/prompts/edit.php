@@ -4,8 +4,8 @@
 </div>
 
 <div class="form-card">
-  <p style="font-size:0.8125rem;color:var(--muted);margin-bottom:1.25rem;padding:0.75rem;background:#FFFBEB;border-radius:var(--r-sm);border:1px solid #FDE68A;">
-    <i class="bi bi-exclamation-triangle" style="color:#D97706;"></i>
+  <p style="font-size:0.8125rem;color:#FCD34D;margin-bottom:1.25rem;padding:0.75rem;background:rgba(245,158,11,.10);border-radius:var(--r-sm);border:1px solid rgba(245,158,11,.32);">
+    <i class="bi bi-exclamation-triangle"></i>
     Saving will re-submit for review and temporarily hide it from public.
   </p>
 

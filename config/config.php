@@ -43,6 +43,19 @@ return [
         // requests slower than this (ms) get a warning entry
         'slow_ms' => (int)($_ENV['LOG_SLOW_MS'] ?? 1500),
     ],
+    'adsense' => [
+        // Turn ads off entirely (e.g. locally) with ADSENSE_ENABLED=false
+        'enabled' => filter_var($_ENV['ADSENSE_ENABLED'] ?? true, FILTER_VALIDATE_BOOLEAN),
+        // Publisher ID — also written into /ads.txt
+        'client'  => $_ENV['ADSENSE_CLIENT'] ?? 'ca-pub-3994115996677076',
+        // Per-placement slot IDs from the AdSense dashboard. Empty slot =>
+        // the placement renders as an Auto-ads-friendly responsive unit.
+        'slots'   => [
+            'home_feed'   => $_ENV['ADSENSE_SLOT_HOME_FEED']   ?? '',
+            'prompt_top'  => $_ENV['ADSENSE_SLOT_PROMPT_TOP']  ?? '',
+            'prompt_side' => $_ENV['ADSENSE_SLOT_PROMPT_SIDE'] ?? '',
+        ],
+    ],
     'google_oauth' => [
         'enabled'      => filter_var($_ENV['GOOGLE_OAUTH_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
         'client_id'    => $_ENV['GOOGLE_CLIENT_ID']     ?? '',

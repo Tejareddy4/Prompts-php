@@ -8,19 +8,19 @@ $karmaTip = implode("\n", array_map(
 ));
 ?>
 <!-- Profile hero -->
-<div style="background:linear-gradient(135deg,#1E1B4B,#4C1D95);border-radius:var(--r-lg);padding:1.5rem 1.25rem;margin-bottom:1.25rem;color:#fff;">
+<div class="hero" style="margin-bottom:1.25rem;">
   <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-    <span class="avatar" style="width:64px;height:64px;font-size:1.5rem;font-weight:800;flex-shrink:0;">
+    <span class="avatar" style="width:64px;height:64px;font-size:1.5rem;font-weight:700;flex-shrink:0;">
       <?= strtoupper(substr($profile['name'] ?? 'U', 0, 2)) ?>
     </span>
     <div>
-      <h1 style="font-size:1.35rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.2rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+      <h1 style="font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.2rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
         <?= e($profile['name']) ?>
         <span class="karma-badge karma-<?= e($publicKarma['color']) ?>" title="<?= e($karmaTip) ?>">
           <i class="bi bi-award-fill"></i> <?= e($publicKarma['level']) ?>
         </span>
       </h1>
-      <div style="font-size:0.875rem;color:rgba(255,255,255,.65);">
+      <div style="font-size:0.875rem;color:var(--muted);">
         @<?= e($profile['username'] ?? '') ?>
         &nbsp;&middot;&nbsp;
         Joined <?= date('M Y', strtotime($profile['created_at'])) ?>
@@ -29,35 +29,39 @@ $karmaTip = implode("\n", array_map(
   </div>
 
   <!-- Stats row -->
-  <div style="display:flex;gap:1.5rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.15);flex-wrap:wrap;">
+  <div class="hero-stats">
     <div>
-      <div style="font-size:1.25rem;font-weight:800;line-height:1;"><?= (int)$stats['prompt_count'] ?></div>
-      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Prompts</div>
+      <div class="hero-stat-num"><?= (int)$stats['prompt_count'] ?></div>
+      <div class="hero-stat-lbl">Prompts</div>
     </div>
+    <span class="hero-stat-sep"></span>
     <div>
-      <div style="font-size:1.25rem;font-weight:800;line-height:1;"><?= (int)$stats['likes_received'] ?></div>
-      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Likes</div>
+      <div class="hero-stat-num"><?= (int)$stats['likes_received'] ?></div>
+      <div class="hero-stat-lbl">Likes</div>
     </div>
+    <span class="hero-stat-sep"></span>
     <div>
-      <div style="font-size:1.25rem;font-weight:800;line-height:1;"><?= (int)$stats['saves_received'] ?></div>
-      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Saves</div>
+      <div class="hero-stat-num"><?= (int)$stats['saves_received'] ?></div>
+      <div class="hero-stat-lbl">Saves</div>
     </div>
+    <span class="hero-stat-sep"></span>
     <div>
-      <div style="font-size:1.25rem;font-weight:800;line-height:1;"><?= (int)$stats['views_received'] ?></div>
-      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Views</div>
+      <div class="hero-stat-num"><?= (int)$stats['views_received'] ?></div>
+      <div class="hero-stat-lbl">Views</div>
     </div>
+    <span class="hero-stat-sep"></span>
     <div title="<?= e($karmaTip) ?>">
-      <div style="font-size:1.25rem;font-weight:800;line-height:1;color:#FBBF24;"><?= (int)$publicKarma['score'] ?></div>
-      <div style="font-size:0.7rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Karma</div>
+      <div class="hero-stat-num" style="background:linear-gradient(135deg,#FBBF24,#F59E0B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;"><?= (int)$publicKarma['score'] ?></div>
+      <div class="hero-stat-lbl">Karma</div>
     </div>
   </div>
 
   <?php if (!empty($viewerIsAdmin) && $privateKarma): ?>
   <!-- Trust score — rendered only for super_admin viewers -->
-  <div style="margin-top:1rem;padding:0.75rem 1rem;background:rgba(0,0,0,.25);border:1px dashed rgba(255,255,255,.25);border-radius:var(--r-sm);">
+  <div style="margin-top:1rem;padding:0.75rem 1rem;background:rgba(0,0,0,.35);border:1px dashed var(--border);border-radius:var(--r-sm);">
     <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-      <i class="bi bi-shield-lock-fill" style="color:rgba(255,255,255,.55);"></i>
-      <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.55);">Admin only · Trust score</span>
+      <i class="bi bi-shield-lock-fill" style="color:var(--subtle);"></i>
+      <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--subtle);">Admin only · Trust score</span>
       <span class="karma-badge karma-<?= e($privateKarma['color']) ?>">
         <?= (int)$privateKarma['score'] ?>/100 · <?= e($privateKarma['band']) ?>
       </span>

@@ -109,6 +109,56 @@ function all_categories(): array
     return $cats;
 }
 
+/**
+ * Ads are served on public pages only — never on admin/dashboard/auth screens,
+ * and never when the publisher ID is missing (avoids empty <ins> on the page).
+ */
+function ads_enabled(): bool
+{
+    static $on = null;
+    if ($on !== null) {
+        return $on;
+    }
+    if (!config('adsense.enabled') || !config('adsense.client')) {
+        return $on = false;
+    }
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    if (defined('BASE_PATH') && BASE_PATH !== '' && str_starts_with($path, BASE_PATH)) {
+        $path = substr($path, strlen(BASE_PATH)) ?: '/';
+    }
+    foreach (['/admin', '/dashboard', '/login', '/register', '/auth/', '/prompts/create'] as $private) {
+        if (str_starts_with($path, $private)) {
+            return $on = false;
+        }
+    }
+    return $on = true;
+}
+
+/**
+ * One AdSense placement. $format 'fluid' needs a real slot ID; without one we
+ * emit a responsive auto unit so Auto ads can still fill the reserved box.
+ */
+function ad_slot(string $name, string $class = 'ad-inarticle', string $format = 'auto'): string
+{
+    if (!ads_enabled()) {
+        return '';
+    }
+    $client = (string)config('adsense.client');
+    $slot   = (string)(config('adsense.slots.' . $name) ?? '');
+
+    $ins = '<ins class="adsbygoogle" style="display:block"'
+         . ' data-ad-client="' . e($client) . '"'
+         . ($slot !== '' ? ' data-ad-slot="' . e($slot) . '"' : '')
+         . ' data-ad-format="' . e($format) . '"'
+         . ' data-full-width-responsive="true"></ins>';
+
+    return '<div class="ad-slot ' . e($class) . '" aria-hidden="true">'
+         . '<span class="ad-label">Advertisement</span>'
+         . $ins
+         . '<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>'
+         . '</div>';
+}
+
 /** Renders a small "cat-{color}" badge for a row carrying category_name/slug/icon/color. */
 function category_badge(array $item, string $size = 'sm'): string
 {

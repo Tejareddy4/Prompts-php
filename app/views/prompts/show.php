@@ -62,6 +62,18 @@
       </div>
     </div>
 
+    <div class="show-card">
+      <div class="show-card-head">
+        <h2><i class="bi bi-lightbulb"></i> How to use this prompt</h2>
+      </div>
+      <div class="show-card-body show-desc">
+        Copy the prompt above and paste it into ChatGPT, Claude or Google Gemini. If it asks for a
+        reference photo, upload a clear, well-lit, high-resolution image for the best results.
+      </div>
+    </div>
+
+    <?= ad_slot('prompt_top', 'ad-inarticle', 'fluid') ?>
+
   </div>
 
   <!-- Actions: sticky bar on mobile, sidebar card on desktop -->
@@ -132,6 +144,8 @@
         </span>
       </div>
     <?php endif; ?>
+
+    <?= ad_slot('prompt_side', 'ad-square') ?>
 
   </aside>
 

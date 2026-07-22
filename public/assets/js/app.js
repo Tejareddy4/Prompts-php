@@ -120,25 +120,16 @@ if (lmBtn) {
       const a = document.createElement('a');
       a.href = `${BASE}/prompt/${item.slug}`;
       a.className = 'pcard';
-      const initials = (item.author || 'U').substring(0, 2).toUpperCase();
+      // Keep this markup in sync with app/views/partials/prompt-card.php
       a.innerHTML = `
-        <div class="pcard-thumb">
-          ${item.image_path ? `<img loading="lazy" src="${esc(item.image_path)}" alt="${esc(item.title)}">` : '<i class="bi bi-stars"></i>'}
+        ${item.image_path ? `<div class="pcard-thumb">
+          <img loading="lazy" src="${esc(item.image_path)}" alt="${esc(item.title)}">
           ${item.category_slug ? `<span class="pcard-cat cat-${esc(item.category_color)}"><i class="bi ${esc(item.category_icon)}"></i> ${esc(item.category_name)}</span>` : ''}
-        </div>
+        </div>` : ''}
         <div class="pcard-body">
-          <div class="pcard-title">${esc(item.title)}</div>
-          ${item.description ? `<div class="pcard-desc">${esc(item.description)}</div>` : ''}
-          <div class="pcard-author">
-            <span class="avatar avatar-xs">${initials}</span>
-            ${esc(item.author || 'Unknown')}
-          </div>
-          <div class="pcard-stats">
-            <span><i class="bi bi-heart-fill" style="color:#EF4444;"></i> ${item.likes_count ?? 0}</span>
-            <span><i class="bi bi-bookmark-fill" style="color:#3B82F6;"></i> ${item.saves_count ?? 0}</span>
-            <span style="margin-left:auto;"><i class="bi bi-eye-fill"></i> ${item.views_count ?? 0}</span>
-          </div>
-          ${item.prompt_text ? `<button type="button" class="pcard-copy js-card-copy" data-id="${item.id}" data-copy="${esc(item.prompt_text)}"><i class="bi bi-clipboard"></i> Copy prompt</button>` : ''}
+          <h3 class="pcard-title">${esc(item.title)}</h3>
+          ${item.description ? `<p class="pcard-desc">${esc(item.description)}</p>` : ''}
+          ${item.prompt_text ? `<button type="button" class="pcard-copy js-card-copy" data-id="${item.id}" data-copy="${esc(item.prompt_text)}">Copy</button>` : ''}
         </div>`;
       grid.appendChild(a);
     });

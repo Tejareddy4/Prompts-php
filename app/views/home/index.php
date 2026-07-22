@@ -10,7 +10,39 @@ unset($sortFilters['cat'], $sortFilters['top_cats']);
 ?>
 
 <?php if (!$activeCategory): ?>
+<?php if (!$q): ?>
+<!-- Hero -->
+<section class="hero">
+  <span class="hero-badge"><?= number_format((int)$totalCount) ?>+ free AI prompts</span>
+  <h1>
+    The Best Prompts<br>
+    <span class="grad-text">for ChatGPT, Claude &amp; Gemini</span>
+  </h1>
+  <p class="hero-sub">Curated cinematic, vintage and editorial AI prompts. Pick one, copy it in a single click, and get stunning results in seconds.</p>
+  <div class="hero-cta">
+    <a href="#prompt-grid" class="btn btn-primary">Browse all prompts <i class="bi bi-arrow-right"></i></a>
+    <a href="/prompts/create" class="btn btn-outline">Submit a prompt</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num"><?= number_format((int)$totalCount) ?></div>
+      <div class="hero-stat-lbl">Free prompts</div>
+    </div>
+    <span class="hero-stat-sep"></span>
+    <div>
+      <div class="hero-stat-num"><?= count($categories) ?></div>
+      <div class="hero-stat-lbl">Categories</div>
+    </div>
+    <span class="hero-stat-sep"></span>
+    <div>
+      <div class="hero-stat-num">1-Click</div>
+      <div class="hero-stat-lbl">Copy to use</div>
+    </div>
+  </div>
+</section>
+<?php else: ?>
 <h1 class="sr-only">Free AI Prompts for ChatGPT, Claude &amp; Gemini</h1>
+<?php endif; ?>
 
 <?php if (!empty($slider)): ?>
 <!-- Featured slider -->
@@ -138,7 +170,13 @@ unset($sortFilters['cat'], $sortFilters['top_cats']);
 
 <!-- Grid -->
 <div class="prompt-grid" id="prompt-grid">
-  <?php foreach ($prompts as $item): require __DIR__ . '/../partials/prompt-card.php'; endforeach; ?>
+  <?php foreach ($prompts as $i => $item): ?>
+    <?php require __DIR__ . '/../partials/prompt-card.php'; ?>
+    <?php // In-feed ad after the first two rows, only when there's enough content below it
+    if ($i === 5 && count($prompts) > 8 && ads_enabled()): ?>
+      <div class="ad-card"><?= ad_slot('home_feed', 'ad-inarticle', 'fluid') ?></div>
+    <?php endif; ?>
+  <?php endforeach; ?>
 </div>
 
 <?php if (empty($prompts)): ?>
@@ -153,6 +191,36 @@ unset($sortFilters['cat'], $sortFilters['top_cats']);
       <i class="bi bi-arrow-down-circle"></i> Load more
     </button>
   </div>
+<?php endif; ?>
+
+<?php if (!$activeCategory && !$q): ?>
+<!-- How it works -->
+<section class="how-section">
+  <div class="how-head">
+    <h2>How It Works</h2>
+    <p>Great AI results in three simple steps</p>
+  </div>
+  <div class="how-grid">
+    <?php foreach ([
+      ['01', 'Browse &amp; pick', 'Explore a curated library of cinematic, vintage and editorial prompts across every category.'],
+      ['02', 'Copy in one click', 'Hit the copy button on any card and the full prompt lands on your clipboard instantly.'],
+      ['03', 'Paste in your AI', 'Open ChatGPT, Claude or Gemini, add your reference photo or details, and generate.'],
+    ] as [$num, $title, $desc]): ?>
+      <div class="how-step">
+        <div class="how-step-num"><?= $num ?></div>
+        <h3><?= $title ?></h3>
+        <p><?= $desc ?></p>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-banner">
+  <h2>Ready to create?</h2>
+  <p>Explore our growing library. 100% free to copy and use with ChatGPT, Claude and Google Gemini.</p>
+  <a href="#prompt-grid" class="btn btn-primary">Explore free prompts <i class="bi bi-arrow-right"></i></a>
+</section>
 <?php endif; ?>
 
 <?php if (!$activeCategory && !$q):

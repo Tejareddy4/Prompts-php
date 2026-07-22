@@ -24,7 +24,8 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#7C3AED">
+  <meta name="theme-color" content="#07070F">
+  <meta name="color-scheme" content="dark">
   <title><?= $metaTitle ?></title>
   <meta name="description" content="<?= e($metaDesc) ?>">
   <meta name="robots" content="<?= $isPrivatePage ? 'noindex, nofollow' : 'index, follow' ?>">
@@ -62,11 +63,16 @@ $canonicalUrl = $canonical ?? rtrim(config('app.base_url'), '/') . $currentPath;
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="<?= asset('/assets/css/app.css') ?>" rel="stylesheet">
   <?php if (str_starts_with($currentPath, '/admin')): ?>
   <link href="<?= asset('/assets/css/admin.css') ?>" rel="stylesheet">
+  <?php endif; ?>
+
+  <?php if (ads_enabled()): ?>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= e((string)config('adsense.client')) ?>"
+          crossorigin="anonymous"></script>
   <?php endif; ?>
 </head>
 <body>
